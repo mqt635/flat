@@ -14,7 +14,7 @@ export function getWeekName(week: Week, lang?: string): string {
 }
 
 export function formatISODayWeekiii(date: Date, lang?: string): string {
-    return format(date, "yyyy/MM/dd iii", { locale: lang?.startsWith("zh") ? zhCN : enUS });
+    return format(date, "yyyy/MM/dd (iii)", { locale: lang?.startsWith("zh") ? zhCN : enUS });
 }
 
 /**
@@ -190,10 +190,11 @@ export function roomStatusToI18nKey(
     }
 }
 
-export const formatInviteCode = (uuid: string, inviteCode?: string): string => {
-    if (inviteCode && /^\d{10}$/.test(inviteCode)) {
-        // 123456789 -> 123 456 7890
-        return inviteCode.slice(0, 3) + " " + inviteCode.slice(3, 6) + " " + inviteCode.slice(6);
+export const formatInviteCode = (uuid: string, code?: string): string => {
+    if (code) {
+        // 1234567890 -> 123 456 7890
+        // X1234567890 -> X123 456 7890
+        return code.replace(/^(\d+)(\d{3})(\d{4})$/, "$1 $2 $3");
     }
     return uuid;
 };

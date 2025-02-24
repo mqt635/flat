@@ -1,18 +1,21 @@
 import "./style.less";
-import emptyFileSVG from "./icons/empty-file.svg";
+import EmptyFileSVG from "./icons/EmptyFileSVG";
 
-import React, { useCallback, useMemo, useRef } from "react";
+import React, { useCallback, useContext, useMemo, useRef } from "react";
 import { Table } from "antd";
 import prettyBytes from "pretty-bytes";
 import { format } from "date-fns";
 import { ColumnsType } from "antd/lib/table";
-import { CloudStorageFile } from "../types";
 import { CloudStorageFileListHeadTip } from "../CloudStorageFileListHeadTip";
 import {
     CloudStorageFileListFileName,
     CloudStorageFileListFileNameProps,
 } from "./CloudStorageFileListFileName";
-import { useTranslation } from "react-i18next";
+import { useTranslate } from "@netless/flat-i18n";
+import { SVGListLoading } from "../../FlatIcons";
+import { CloudFile } from "@netless/flat-server-api";
+import { createFileNameComparer } from "./utils";
+import { DarkModeContext } from "../../FlatThemeProvider";
 
 export interface CloudStorageFileListProps
     extends Pick<
@@ -23,11 +26,14 @@ export interface CloudStorageFileListProps
         | "onItemTitleClick"
         | "renamingFileUUID"
         | "onRename"
+        | "onNewDirectoryFile"
+        | "parentDirectoryPath"
     > {
     /** Cloud Storage List items */
-    files: CloudStorageFile[];
+    files: CloudFile[];
     /** User selected file UUIDs */
     selectedFileUUIDs: string[];
+    isLoadingData: Boolean;
     /** Fires when user select or deselect files */
     onSelectionChange: (fileUUID: string[]) => void;
 }
@@ -44,13 +50,17 @@ export const CloudStorageFileList: React.FC<CloudStorageFileListProps> = ({
     titleClickable = false,
     onItemTitleClick,
     renamingFileUUID,
+    isLoadingData,
     onRename,
+    onNewDirectoryFile,
+    parentDirectoryPath,
 }) => {
-    const { t } = useTranslation();
+    const t = useTranslate();
+    const darkMode = useContext(DarkModeContext);
     const popupContainerRef = useRef<HTMLDivElement>(null);
     const getPopupContainer = useCallback(() => popupContainerRef.current || document.body, []);
 
-    const columns = useMemo<ColumnsType<CloudStorageFile>>(
+    const columns = useMemo<ColumnsType<CloudFile>>(
         () => [
             {
                 title: (
@@ -65,6 +75,8 @@ export const CloudStorageFileList: React.FC<CloudStorageFileListProps> = ({
                 ),
                 dataIndex: "fileName",
                 ellipsis: true,
+                sorter: createFileNameComparer(),
+                showSorterTooltip: false,
                 render: function renderCloudStorageFileName(_fileName, file, index) {
                     return (
                         <CloudStorageFileListFileName
@@ -72,10 +84,12 @@ export const CloudStorageFileList: React.FC<CloudStorageFileListProps> = ({
                             fileMenus={fileMenus}
                             getPopupContainer={getPopupContainer}
                             index={index}
+                            parentDirectoryPath={parentDirectoryPath}
                             renamingFileUUID={renamingFileUUID}
                             titleClickable={titleClickable}
                             onItemMenuClick={onItemMenuClick}
                             onItemTitleClick={onItemTitleClick}
+                            onNewDirectoryFile={onNewDirectoryFile}
                             onRename={onRename}
                         />
                     );
@@ -88,11 +102,11 @@ export const CloudStorageFileList: React.FC<CloudStorageFileListProps> = ({
                 width: 100,
                 sorter: (file1, file2) => file1.fileSize - file2.fileSize,
                 showSorterTooltip: false,
-                render: function renderCloudStorageFileSize(
-                    fileSize: CloudStorageFile["fileSize"],
-                ) {
+                render: function renderCloudStorageFileSize(fileSize: CloudFile["fileSize"]) {
                     const formattedSize = prettyBytes(fileSize);
-                    return <span title={formattedSize}>{formattedSize}</span>;
+                    return (
+                        <span title={formattedSize}>{fileSize === 0 ? "-" : formattedSize}</span>
+                    );
                 },
             },
             {
@@ -102,23 +116,24 @@ export const CloudStorageFileList: React.FC<CloudStorageFileListProps> = ({
                 width: 170,
                 sorter: (file1, file2) => file1.createAt.valueOf() - file2.createAt.valueOf(),
                 sortDirections: ["ascend", "descend", "ascend"],
-                defaultSortOrder: "descend",
                 showSorterTooltip: false,
-                render: function renderCloudStorageCreateAt(date: CloudStorageFile["createAt"]) {
+                render: function renderCloudStorageCreateAt(date: CloudFile["createAt"]) {
                     const formattedDate = format(date, "yyyy/MM/dd HH:mm");
                     return <span title={formattedDate}>{formattedDate}</span>;
                 },
             },
         ],
         [
-            fileMenus,
+            t,
             getPopupContainer,
-            onItemMenuClick,
-            onItemTitleClick,
-            onRename,
+            fileMenus,
+            parentDirectoryPath,
             renamingFileUUID,
             titleClickable,
-            t,
+            onItemMenuClick,
+            onItemTitleClick,
+            onNewDirectoryFile,
+            onRename,
         ],
     );
 
@@ -138,10 +153,15 @@ export const CloudStorageFileList: React.FC<CloudStorageFileListProps> = ({
                 }}
                 size="small"
             />
+            {isLoadingData && (
+                <div className="cloud-storage-pull-up-loading">
+                    <SVGListLoading />
+                </div>
+            )}
             {files.length <= 0 && (
                 <div className="cloud-storage-file-list-empty">
                     <div className="cloud-storage-file-list-empty-content">
-                        <img height={124} src={emptyFileSVG} width={124} />
+                        <EmptyFileSVG isDark={darkMode} />
                         <div className="cloud-storage-file-list-empty-text">{t("no-data")}</div>
                     </div>
                 </div>

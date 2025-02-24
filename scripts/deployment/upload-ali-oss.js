@@ -1,17 +1,24 @@
 const os = require("os");
 const OSS = require("ali-oss");
-const { configPath } = require("../constants");
+const readline = require("readline");
 const { winArtifactsFiles, macArtifactsFiles, uploadRule, arrayChunks } = require("./utils");
+const { autoChooseConfig } = require("../utils/auto-choose-config");
 
 require("dotenv-flow").config({
     node_env: "production",
-    path: configPath,
+    path: autoChooseConfig(),
     silent: true,
 });
 
 console.log(`
 will upload file list:
 ${JSON.stringify([...winArtifactsFiles, ...macArtifactsFiles], null, 2)}
+
+FLAT_REGION = ${process.env.FLAT_REGION}
+
+will upload to OSS:
+BUCKET = ${process.env.ARTIFACTS_ALIBABA_CLOUD_OSS_BUCKET}
+REGION = ${process.env.ARTIFACTS_ALIBABA_CLOUD_OSS_REGION}
 `);
 
 const client = new OSS({
@@ -24,6 +31,22 @@ const client = new OSS({
 });
 
 (async () => {
+    const repl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+        prompt: "",
+    });
+    repl.on("SIGINT", () => {
+        repl && repl.close();
+    });
+    const answer = await new Promise(resolve => {
+        repl.question(`is that ok? (y/N) `, a => resolve(a || "N"));
+    });
+    if (answer[0].toLowerCase() !== "y") {
+        console.log("ok i give up.");
+        process.exit(0);
+    }
+
     const winUploadRule = uploadRule(process.env.ARTIFACTS_ALIBABA_CLOUD_OSS_FOLDER, "win");
     const macUploadRule = uploadRule(process.env.ARTIFACTS_ALIBABA_CLOUD_OSS_FOLDER, "mac");
 
@@ -54,7 +77,7 @@ const client = new OSS({
     // so change the variable to a function
     // see: https://github.com/ali-sdk/ali-oss/blob/d3583e8460a062a28e12bd719a1929ea659c1c5e/lib/browser/object.js#L69
     const generalAlibabaCloudOSSOptions = () => ({
-        timeout: 1000 * 60 * 2,
+        timeout: 1000 * 60 * 3,
     });
 
     const uploadBackupFile = objectInfo.map(({ backupPath, localPath, size }) => {
@@ -112,4 +135,5 @@ const client = new OSS({
     });
 
     await Promise.all(uploadEffectFile);
+    process.exit(0);
 })();

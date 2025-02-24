@@ -4,7 +4,7 @@ import Chance from "chance";
 import faker from "faker";
 
 import { CloudStorageFileList, CloudStorageFileListProps } from "./index";
-import { CloudStorageFile } from "../types";
+import { CloudFile, FileConvertStep, FileResourceType, Region } from "@netless/flat-server-api";
 
 const chance = new Chance();
 
@@ -30,8 +30,22 @@ Overview.args = {
                 fileUUID: faker.datatype.uuid(),
                 fileName: faker.random.word() + "." + faker.system.commonFileExt(),
                 fileSize: chance.integer({ min: 0, max: 1000 * 1000 * 100 }),
-                convert: chance.pickone(["idle", "error", "success", "converting"]),
                 createAt: faker.date.past(),
+                fileURL: faker.internet.url(),
+                resourceType: FileResourceType.NormalResources,
+                meta: {
+                    whiteboardProjector: {
+                        taskToken: faker.random.word(),
+                        taskUUID: faker.random.word(),
+                        convertStep: chance.pickone([
+                            FileConvertStep.None,
+                            FileConvertStep.Converting,
+                            FileConvertStep.Done,
+                            FileConvertStep.Failed,
+                        ]),
+                        region: Region.CN_HZ,
+                    },
+                },
             };
         }),
 };
@@ -48,14 +62,28 @@ export const LongFileName: Story<{ fileName: string } & CloudStorageFileListProp
     ...restProps
 }) => {
     const [selectedFileUUIDs, setSelectedFileUUIDs] = useState<string[]>([]);
-    const files = useMemo<CloudStorageFile[]>(
+    const files = useMemo<CloudFile[]>(
         () => [
             {
                 fileUUID: faker.datatype.uuid(),
                 fileName,
                 fileSize: chance.integer({ min: 0, max: 1000 * 1000 * 100 }),
-                convert: chance.pickone(["idle", "error", "success", "converting"]),
                 createAt: faker.date.past(),
+                fileURL: faker.internet.url(),
+                resourceType: FileResourceType.NormalResources,
+                meta: {
+                    whiteboardProjector: {
+                        taskToken: faker.random.word(),
+                        taskUUID: faker.random.word(),
+                        convertStep: chance.pickone([
+                            FileConvertStep.None,
+                            FileConvertStep.Converting,
+                            FileConvertStep.Done,
+                            FileConvertStep.Failed,
+                        ]),
+                        region: Region.CN_HZ,
+                    },
+                },
             },
         ],
         [fileName],
@@ -113,7 +141,7 @@ export const PlayableExample: Story<{ itemCount: number } & CloudStorageFileList
     ...restProps
 }) => {
     const [selectedFileUUIDs, setSelectedFileUUIDs] = useState<string[]>([]);
-    const files = useMemo<CloudStorageFile[]>(
+    const files = useMemo<CloudFile[]>(
         () =>
             Array(itemCount)
                 .fill(0)
@@ -122,8 +150,22 @@ export const PlayableExample: Story<{ itemCount: number } & CloudStorageFileList
                         fileUUID: faker.datatype.uuid(),
                         fileName: faker.random.words() + "." + faker.system.commonFileExt(),
                         fileSize: chance.integer({ min: 0, max: 1000 * 1000 * 100 }),
-                        convert: chance.pickone(["idle", "error", "success", "converting"]),
                         createAt: faker.date.past(),
+                        fileURL: faker.internet.url(),
+                        resourceType: FileResourceType.NormalResources,
+                        meta: {
+                            whiteboardProjector: {
+                                taskToken: faker.random.word(),
+                                taskUUID: faker.random.word(),
+                                convertStep: chance.pickone([
+                                    FileConvertStep.None,
+                                    FileConvertStep.Converting,
+                                    FileConvertStep.Done,
+                                    FileConvertStep.Failed,
+                                ]),
+                                region: Region.CN_HZ,
+                            },
+                        },
                     };
                 }),
         [itemCount],

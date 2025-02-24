@@ -1,7 +1,7 @@
 import { Meta, Story } from "@storybook/react";
 import React from "react";
-import { useTranslation } from "react-i18next";
-import { LoginButton, LoginButtonProviderType, LoginButtonProps } from "..";
+import { useTranslate } from "@netless/flat-i18n";
+import { LoginButton, LoginButtonProviderType, LoginButtonProps } from ".";
 import { message } from "antd";
 
 const storyMeta: Meta = {
@@ -11,17 +11,16 @@ const storyMeta: Meta = {
 
 export default storyMeta;
 
-export const Overview: Story<LoginButtonProps> = () => {
-    const { i18n } = useTranslation();
+export const Overview: Story<LoginButtonProps> = ({ provider }) => {
+    const t = useTranslate();
 
     const handleLogin = (type: LoginButtonProviderType): void => {
         void message.info(type);
     };
 
-    return (
-        <>
-            <LoginButton provider="wechat" text={i18n.t("login-wechat")} onLogin={handleLogin} />
-            <LoginButton provider="github" text={i18n.t("login-github")} onLogin={handleLogin} />
-        </>
-    );
+    return <LoginButton provider={provider} text={t(`login-${provider}`)} onClick={handleLogin} />;
+};
+
+Overview.args = {
+    provider: "wechat",
 };

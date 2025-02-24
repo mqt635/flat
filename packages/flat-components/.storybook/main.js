@@ -1,6 +1,7 @@
 const path = require("path");
 const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
 const ESLintPlugin = require("eslint-webpack-plugin");
+const { DefinePlugin } = require("webpack");
 
 module.exports = {
     stories: ["../src/**/*.stories.mdx", "../src/**/*.stories.@(js|jsx|ts|tsx)"],
@@ -15,6 +16,9 @@ module.exports = {
     },
     webpackFinal: config => {
         config.plugins.push(
+            new DefinePlugin({
+                "process.env.FLAT_REGION": '"CN"',
+            }),
             new ESLintPlugin({
                 fix: true,
                 extensions: ["ts", "tsx"],
@@ -61,12 +65,6 @@ module.exports = {
                 },
             ],
         });
-
-        config.resolve.alias = {
-            ...config.resolve.alias,
-            "flat-types": path.resolve(__dirname, "..", "..", "flat-types", "src"),
-            "flat-i18n": path.resolve(__dirname, "..", "..", "flat-i18n", "locales"),
-        };
 
         return config;
     },

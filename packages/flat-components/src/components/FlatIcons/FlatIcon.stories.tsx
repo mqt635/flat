@@ -16,50 +16,52 @@ const storyMeta: Meta = {
 
 export default storyMeta;
 
-const FIconTable: React.FC<{ active: boolean; icons: string[]; column: number; title: string }> =
-    props => {
-        const rows = chunk(props.icons, props.column);
+const FIconTable: React.FC<{
+    active: boolean;
+    icons: string[];
+    column: number;
+    title: string;
+}> = props => {
+    const rows = chunk(props.icons, props.column);
 
-        return (
-            <div className="box center" style={{ maxWidth: props.column * 200 }}>
-                <h1 className="title tc">{props.title}</h1>
-                <div
-                    className="mw8 center"
-                    style={{
-                        fontSize: 12,
-                        color: "var(--grey-3)",
-                        wordBreak: "break-all",
-                    }}
-                >
-                    {rows.map((row, i) => (
-                        <div key={i} className="ph3-ns">
-                            <div className="cf ph2-ns">
-                                {row.map(name => (
-                                    <div
-                                        key={name}
-                                        className={`fl w-100 w-${Math.floor(
-                                            100 / props.column,
-                                        )}-ns`}
-                                    >
-                                        <div className="tc pv3 ph1">
-                                            {React.createElement(
-                                                require(`./icons/SVG${name}`).default,
-                                                {
-                                                    active: props.active,
-                                                    style: { width: 24, height: 24 },
-                                                },
-                                            )}
-                                            <div className="tc">SVG{name}</div>
-                                        </div>
+    return (
+        <div className="box center" style={{ maxWidth: props.column * 200 }}>
+            <h1 className="title tc">{props.title}</h1>
+            <div
+                className="mw8 center"
+                style={{
+                    fontSize: 12,
+                    color: "var(--grey-3)",
+                    wordBreak: "break-all",
+                }}
+            >
+                {rows.map((row, i) => (
+                    <div key={i} className="ph3-ns">
+                        <div className="cf ph2-ns">
+                            {row.map(name => (
+                                <div
+                                    key={name}
+                                    className={`fl w-100 w-${Math.floor(100 / props.column)}-ns`}
+                                >
+                                    <div className="tc pv3 ph1">
+                                        {React.createElement(
+                                            require(`./icons/SVG${name}`).default,
+                                            {
+                                                active: props.active,
+                                                style: { width: 24, height: 24 },
+                                            },
+                                        )}
+                                        <div className="tc">SVG{name}</div>
                                     </div>
-                                ))}
-                            </div>
+                                </div>
+                            ))}
                         </div>
-                    ))}
-                </div>
+                    </div>
+                ))}
             </div>
-        );
-    };
+        </div>
+    );
+};
 
 export const DirectionalIcons: Story = ({ active }) => (
     <FIconTable
@@ -128,6 +130,7 @@ export const SuggestedIcons: Story = ({ active }) => (
             "CircleInfoOutlined",
             "CircleInfoFilled",
             "Load",
+            "ListLoading",
         ]}
         title="Suggested Icons"
     />
@@ -213,14 +216,56 @@ export const InteractiveIcons: Story = ({ active }) => (
             "HomeFilled",
             "CloudFilled",
             "Test",
+            "TestFilled",
             "Github",
             "Copy",
+            "Code",
             "HandUp",
             "Delete",
             "Reset",
             "Download",
             "ModeInteractive",
+            "Logout",
+            "Maximize",
+            "Web",
         ]}
         title="Interactive Icons"
+    />
+);
+
+export const Tools: Story = ({ active }) => (
+    <FIconTable
+        active={active}
+        column={4}
+        icons={[
+            "Click",
+            "ClickFilled",
+            "Selector",
+            "SelectorFilled",
+            "Pencil",
+            "PencilFilled",
+            "Text",
+            "TextFilled",
+            "Eraser",
+            "EraserFilled",
+            "Rectangle",
+            "RectangleBolded",
+            "Circle",
+            "CircleBolded",
+            "Rhombus",
+            "RhombusBolded",
+            "Triangle",
+            "TriangleBolded",
+            "Balloon",
+            "BalloonBolded",
+            "Line",
+            "LineBolded",
+            "Arrow",
+            "ArrowBolded",
+            "Clear",
+            "Star",
+            "StarBolded",
+        ]}
+        title="Tools Icons"
     />
 );

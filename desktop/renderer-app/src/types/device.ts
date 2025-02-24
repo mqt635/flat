@@ -1,4 +1,3 @@
-export interface Device {
-    devicename: string;
-    deviceid: string;
-}
+import { IServiceVideoChatDevice } from "@netless/flat-services";
+
+export type Device = IServiceVideoChatDevice;

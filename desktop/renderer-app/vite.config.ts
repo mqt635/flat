@@ -1,30 +1,34 @@
-import refresh from "@vitejs/plugin-react-refresh";
-import { defineConfig } from "vite";
-import eslintPlugin from "vite-plugin-eslint";
+import react from "@vitejs/plugin-react";
+import { defineConfig, PluginOption, UserConfig } from "vite";
 import { visualizer } from "rollup-plugin-visualizer";
 import copy from "rollup-plugin-copy";
 import path from "path";
 
-// TODO: find new place to store vite-plugin-dotenv
-import { dotenv } from "../../web/flat-web/scripts/vite-plugin-dotenv";
+import { dotenv } from "@netless/flat-vite-plugins/dotenv";
+import { reactVirtualized } from "@netless/flat-vite-plugins/react-virtualized";
 import { electron } from "./scripts/vite-plugin-electron";
-import {
-    configPath,
-    typesEntryPath,
-    i18nEntryPath,
-    componentsEntryPath,
-    rootNodeModules,
-    rendererPath,
-} from "../../scripts/constants";
+import { injectGtag } from "./scripts/vite-plugin-html-gtag";
+import { rootNodeModules, rendererPath } from "../../scripts/constants";
+import { autoChooseConfig } from "../../scripts/utils/auto-choose-config";
 
-export default defineConfig(() => {
-    const plugins = [
-        refresh(),
-        dotenv(configPath),
-        electron(),
-        eslintPlugin({
-            cache: false,
-        }),
+// HACK: disable dedupe in the react plugin
+// We need to do this because Flat is not a typical react project,
+// the 'white-web-sdk' has a dependency of react@16 while Flat is using react@17,
+// they cannot be de-deduplicated because 'white-web-sdk' heavily uses the react@16 internal APIs.
+const reactPlugin = react();
+{
+    const p = (reactPlugin as any).find((e: any) => e?.name === "vite:react-refresh");
+    // This line overrides the original config (dedupe)
+    // See https://github.com/vitejs/vite/blob/87b48f9103f467c3ad33b039ccf845aed9a281d7/packages/plugin-react/src/index.ts#L379
+    p.config = () => ({ esbuild: { target: "esnext" } });
+}
+
+export default defineConfig((): UserConfig => {
+    const plugins: PluginOption[] = [
+        reactPlugin,
+        dotenv(autoChooseConfig()),
+        reactVirtualized(),
+        injectGtag(),
         copy({
             targets: [
                 /**
@@ -56,30 +60,20 @@ export default defineConfig(() => {
     }
     return {
         base: "./",
+        server: {
+            port: 3000,
+        },
         plugins,
         resolve: {
             alias: [
                 // replace webpack alias
-                {
-                    find: /^~/,
-                    replacement: "",
-                },
-                {
-                    find: "flat-types",
-                    replacement: typesEntryPath,
-                },
-                {
-                    find: "flat-i18n",
-                    replacement: i18nEntryPath,
-                },
-                {
-                    find: "flat-components",
-                    replacement: componentsEntryPath,
-                },
+                { find: /^~/, replacement: "" },
             ],
         },
+        assetsInclude: ["svga"],
         build: {
             sourcemap: true,
+            emptyOutDir: true,
             /**
              * Vite will generate resources in assets folder after build，
              * but index.html with './' relative path load module,
@@ -88,7 +82,6 @@ export default defineConfig(() => {
             assetsDir: "",
             rollupOptions: {
                 output: {
-                    format: "cjs",
                     assetFileNames: assetInfo => {
                         if (assetInfo.name?.endsWith("mp3")) {
                             return "[name][extname]";

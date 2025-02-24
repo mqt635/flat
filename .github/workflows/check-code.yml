@@ -7,79 +7,48 @@ on:
     paths-ignore:
       - "docs/**"
       - "*.md"
-      - ".yarnrc"
       - "LICENSE"
+      - ".vscode"
+      - ".husky"
+      - "assets"
+      - "scripts"
 
 jobs:
   check-code:
-    runs-on: macos-10.15
+    runs-on: macos-latest
+
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - uses: dorny/paths-filter@v2
-        id: filter
+      - name: Install PNPM
+        uses: pnpm/action-setup@v2
         with:
-          filters: |
-            i18n: &i18n
-              - 'packages/flat-i18n/locales/*.json'
-            components: &components
-              - 'packages/flat-components/**/*.(ts|tsx|css|less)'
-              # e.g: package.json / tsconfig.json rollup.config.js eslintrc.js
-              - 'packages/flat-components/*.(js|json)'
-              - 'packages/flat-components/.eslintignore'
-            types: &types
-              - 'packages/flat-types/*.json'
-              - 'packages/flat-types/**/*.ts'
-            renderer:
-              - *components
-              - *types
-              - 'desktop/renderer-app/*.(js|json)'
-              - 'desktop/renderer-app/.eslintignore'
-              - 'desktop/renderer-app/webpack/**'
-              - 'desktop/renderer-app/typings/**'
-              - 'desktop/renderer-app/**/*.(ts|tsx|css|less)'
-            main:
-              - *types
-              - 'desktop/main-app/*.(js|json)'
-              - 'desktop/main-app/.eslintignore'
-              - 'desktop/main-app/webpack/**'
-              - 'desktop/main-app/typings/**'
-              - 'desktop/main-app/**/*.ts'
-            flat-web:
-              - 'web/flat-web/**/*.(ts|tsx)'
+          version: latest
 
-      - name: Install NodeJS
-        uses: actions/setup-node@v2
+      - name: Restore Cache
+        uses: actions/setup-node@v3
         with:
-          node-version: "16"
+          node-version: 18
+          cache: "pnpm"
 
       - name: Install changed package dependencies and build packages
         run: |-
-          if node ./scripts/ci/install-changed-package-dependencies.js; then
-            # failure automatically retries 3 times
-            yarn run bootstrap || yarn run bootstrap || yarn run bootstrap
-          fi
-        env:
-          components: ${{ steps.filter.outputs.components }}
-          types: ${{ steps.filter.outputs.types }}
-          renderer: ${{ steps.filter.outputs.renderer }}
-          main: ${{ steps.filter.outputs.main }}
-          flatWeb: ${{ steps.filter.outputs.flat-web }}
+          # failure automatically retries 3 times
+          pnpm i || pnpm i || pnpm i
 
       - name: Build renderer
-        run: yarn workspace renderer-app build
-        if: steps.filter.outputs.renderer == 'true'
+        run: pnpm -F renderer-app build
 
       - name: Build main
-        run: yarn workspace flat build:main
-        if: steps.filter.outputs.main == 'true'
+        run: pnpm -F flat build
 
       - name: Build flat-web
-        run: yarn workspace flat-web build
-        if: steps.filter.outputs.flat-web == 'true'
+        run: pnpm -F flat-web build
 
       - name: Check i18n
         run: node packages/flat-i18n/scripts/check.js
-        if: steps.filter.outputs.i18n == 'true'

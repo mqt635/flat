@@ -1,6 +1,6 @@
 import React from "react";
 import { Button, Modal } from "antd";
-import { useTranslation } from "react-i18next";
+import { useTranslate } from "@netless/flat-i18n";
 
 export interface CancelPeriodicRoomModalProps {
     visible: boolean;
@@ -15,7 +15,7 @@ export const CancelPeriodicRoomModal: React.FC<CancelPeriodicRoomModalProps> = (
     onCancel,
     onCancelPeriodicRoom,
 }) => {
-    const { t } = useTranslation();
+    const t = useTranslate();
     const title = (() => {
         if (!isCreator) {
             return t("remove-room");
@@ -42,8 +42,8 @@ export const CancelPeriodicRoomModal: React.FC<CancelPeriodicRoomModalProps> = (
                     {t("confirm")}
                 </Button>,
             ]}
+            open={visible}
             title={title}
-            visible={visible}
             onCancel={onCancel}
         >
             {content()}

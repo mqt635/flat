@@ -4,23 +4,23 @@ import { SVGSend, SVGChatBanning } from "../../FlatIcons";
 import React, { useMemo, useRef, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { useSafePromise } from "../../../utils/hooks";
-import { useTranslation } from "react-i18next";
+import { useTranslate } from "@netless/flat-i18n";
 
 export interface ChatTypeBoxProps {
     /** Only room owner can ban chatting. */
     isCreator: boolean;
     isBan: boolean;
     onBanChange: () => void;
-    onMessageSend: (text: string) => Promise<void>;
+    onMessageSend?: (text: string) => Promise<void>;
 }
 
-export const ChatTypeBox = observer<ChatTypeBoxProps>(function ChatTypeBox({
+export const ChatTypeBox = /* @__PURE__ */ observer<ChatTypeBoxProps>(function ChatTypeBox({
     isCreator,
     isBan,
     onBanChange,
     onMessageSend,
 }) {
-    const { t } = useTranslation();
+    const t = useTranslate();
     const sp = useSafePromise();
     const inputRef = useRef<HTMLInputElement>(null);
     const [text, updateText] = useState("");
@@ -30,6 +30,9 @@ export const ChatTypeBox = observer<ChatTypeBoxProps>(function ChatTypeBox({
 
     async function sendMessage(): Promise<void> {
         if (isSending || trimmedText.length <= 0) {
+            return;
+        }
+        if (!onMessageSend) {
             return;
         }
 
@@ -74,7 +77,7 @@ export const ChatTypeBox = observer<ChatTypeBoxProps>(function ChatTypeBox({
             )}
             <button
                 className="chat-typebox-send"
-                disabled={isBan || isSending || trimmedText.length <= 0}
+                disabled={(!isCreator && isBan) || isSending || trimmedText.length <= 0}
                 title={t("send")}
                 onClick={sendMessage}
             >

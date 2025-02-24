@@ -1,30 +1,44 @@
 import "./style.less";
+import chatMessagesDefaultSVG from "./icons/chat-messages-default.svg";
+import chatMessagesDefaultDarkSVG from "./icons/chat-messages-default-dark.svg";
 
-import React from "react";
+import React, { useContext } from "react";
 import { observer } from "mobx-react-lite";
 import { ChatTypeBox, ChatTypeBoxProps } from "../ChatTypeBox";
-import { ChatMessageList, ChatMessageListProps } from "../ChatMessageList";
-import { useTranslation } from "react-i18next";
+import { ChatMessageList, ChatMessageListProps, ReadOnlyChatMessageList } from "../ChatMessageList";
+import { DarkModeContext } from "../../FlatThemeProvider";
 
-export type ChatMessagesProps = ChatTypeBoxProps & ChatMessageListProps;
+export type ChatMessagesProps = ChatTypeBoxProps & ChatMessageListProps & { readOnly?: boolean };
 
-export const ChatMessages = observer<ChatMessagesProps>(function ChatMessages({
+export const ChatMessages = /* @__PURE__ */ observer<ChatMessagesProps>(function ChatMessages({
     messages,
+    readOnly,
     ...restProps
 }) {
-    const { t } = useTranslation();
+    const isDark = useContext(DarkModeContext);
     return (
         <div className="chat-messages-wrap">
             <div className="chat-messages">
                 {messages.length > 0 ? (
                     <div className="chat-messages-box">
-                        <ChatMessageList messages={messages} {...restProps} />
+                        {readOnly ? (
+                            <ReadOnlyChatMessageList messages={messages} {...restProps} />
+                        ) : (
+                            <ChatMessageList messages={messages} {...restProps} />
+                        )}
                     </div>
                 ) : (
-                    <div className="chat-messages-default">{t("say-something")}</div>
+                    (!readOnly && (
+                        <div className="chat-messages-default">
+                            <img
+                                src={isDark ? chatMessagesDefaultDarkSVG : chatMessagesDefaultSVG}
+                            />
+                        </div>
+                    )) ||
+                    null
                 )}
             </div>
-            <ChatTypeBox {...restProps} />
+            {!!restProps.onMessageSend && <ChatTypeBox {...restProps} />}
         </div>
     );
 });

@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import { Story, Meta, ArgTypes } from "@storybook/react";
 import Chance from "chance";
 import faker from "faker";
-import { action, AnnotationsMap, makeObservable } from "mobx";
+import { action, AnnotationsMap, makeObservable, observable } from "mobx";
 import { Modal } from "antd";
 import { CloudStorageContainer, CloudStorageStore } from "./index";
 import { CloudStorageUploadTask } from "../../components/CloudStorage/types";
+import { FileConvertStep, FileResourceType, Region } from "@netless/flat-server-api";
 
 const chance = new Chance();
 
@@ -32,11 +33,14 @@ const fakeStoreImplProps = [
     "onItemMenuClick",
     "onItemTitleClick",
     "onNewFileName",
-    "addExternalFile",
+    "onNewEmptyDirectory",
+    "onNewDirectoryFile",
+    "onParentDirectoryPathClick",
     "onDropFile",
+    "fetchMoreCloudStorageData",
 ] as const;
 
-type FakeStoreImplProps = typeof fakeStoreImplProps[number];
+type FakeStoreImplProps = (typeof fakeStoreImplProps)[number];
 
 type FakeStoreConfig = Pick<CloudStorageStore, FakeStoreImplProps>;
 
@@ -49,8 +53,11 @@ class FakeStore extends CloudStorageStore {
     public onItemMenuClick: FakeStoreConfig["onItemMenuClick"];
     public onItemTitleClick;
     public onNewFileName: FakeStoreConfig["onNewFileName"];
-    public addExternalFile;
+    public onNewEmptyDirectory: FakeStoreConfig["onNewEmptyDirectory"];
+    public onNewDirectoryFile: FakeStoreConfig["onNewDirectoryFile"];
+    public onParentDirectoryPathClick: FakeStoreConfig["onParentDirectoryPathClick"];
     public onDropFile: FakeStoreConfig["onDropFile"];
+    public fetchMoreCloudStorageData;
 
     public pendingUploadTasks: CloudStorageStore["pendingUploadTasks"] = [];
     public uploadingUploadTasks: CloudStorageStore["uploadingUploadTasks"] = [];
@@ -61,14 +68,29 @@ class FakeStore extends CloudStorageStore {
     public constructor(config: FakeStoreConfig) {
         super();
 
-        this.files = Array(25)
+        this.files = Array(this.cloudStorageSinglePageFiles)
             .fill(0)
             .map(() => ({
                 fileUUID: faker.datatype.uuid(),
                 fileName: faker.random.words() + "." + faker.system.commonFileExt(),
                 fileSize: chance.integer({ min: 0, max: 1000 * 1000 * 100 }),
-                convert: chance.pickone(["idle", "error", "success", "converting"]),
                 createAt: faker.date.past(),
+                fileURL: faker.internet.url(),
+                external: faker.datatype.boolean(),
+                resourceType: FileResourceType.NormalResources,
+                meta: {
+                    whiteboardProjector: {
+                        taskToken: faker.random.word(),
+                        taskUUID: faker.random.word(),
+                        convertStep: chance.pickone([
+                            FileConvertStep.None,
+                            FileConvertStep.Converting,
+                            FileConvertStep.Done,
+                            FileConvertStep.Failed,
+                        ]),
+                        region: Region.CN_HZ,
+                    },
+                },
             }));
 
         this.totalUsage = this.files.reduce((sum, file) => sum + file.fileSize, 0);
@@ -110,8 +132,7 @@ class FakeStore extends CloudStorageStore {
         this.onUploadCancel = config.onUploadCancel;
         this.onUploadPanelClose = config.onUploadPanelClose;
         this.onUploadRetry = config.onUploadRetry;
-        this.addExternalFile = config.addExternalFile;
-        this.onItemMenuClick = (fileUUID, menuKey) => {
+        this.onItemMenuClick = (fileUUID, menuKey, pushHistory) => {
             switch (menuKey) {
                 case "download": {
                     const file = this.files.find(file => file.fileUUID === fileUUID);
@@ -133,7 +154,7 @@ class FakeStore extends CloudStorageStore {
                     break;
                 }
             }
-            config.onItemMenuClick(fileUUID, menuKey);
+            config.onItemMenuClick(fileUUID, menuKey, pushHistory);
         };
         this.onItemTitleClick = config.onItemTitleClick;
         this.onNewFileName = (fileUUID, fileName) => {
@@ -143,24 +164,95 @@ class FakeStore extends CloudStorageStore {
             }
             config.onNewFileName(fileUUID, fileName);
         };
+        this.onNewEmptyDirectory = config.onNewEmptyDirectory;
+        this.onParentDirectoryPathClick = config.onParentDirectoryPathClick;
+        this.onNewDirectoryFile = config.onNewDirectoryFile;
         this.onDropFile = files => {
             for (const file of files) {
                 this.files.push({
                     fileUUID: faker.datatype.uuid(),
                     fileName: file.name,
                     fileSize: file.size,
-                    convert: "idle",
                     createAt: faker.date.past(),
+                    fileURL: faker.internet.url(),
+                    resourceType: FileResourceType.NormalResources,
+                    meta: {
+                        whiteboardProjector: {
+                            taskToken: faker.random.word(),
+                            taskUUID: faker.random.word(),
+                            convertStep: chance.pickone([
+                                FileConvertStep.None,
+                                FileConvertStep.Converting,
+                                FileConvertStep.Done,
+                                FileConvertStep.Failed,
+                            ]),
+                            region: Region.CN_HZ,
+                        },
+                    },
                 });
+            }
+        };
+        this.fetchMoreCloudStorageData = async (page: number): Promise<void> => {
+            if (this.isFetchingFiles || this.files.length > 300) {
+                console.warn("the cloud storage files is enough");
+                return Promise.resolve();
+            }
+
+            const cloudStorageTotalPagesFilesCount =
+                this.cloudStorageDataPagination * this.cloudStorageSinglePageFiles;
+
+            if (this.files.length >= cloudStorageTotalPagesFilesCount) {
+                this.isFetchingFiles = true;
+
+                const newFilesData = Array(this.cloudStorageSinglePageFiles * page)
+                    .fill(0)
+                    .map(() => ({
+                        fileUUID: faker.datatype.uuid(),
+                        fileName: faker.random.words() + "." + faker.system.commonFileExt(),
+                        fileSize: chance.integer({ min: 0, max: 1000 * 1000 * 100 }),
+                        convert: chance.pickone(["idle", "error", "success", "converting"]),
+                        createAt: faker.date.past(),
+                    }));
+
+                for (const { fileName, fileSize } of newFilesData) {
+                    this.files.push({
+                        fileUUID: faker.datatype.uuid(),
+                        fileName: fileName,
+                        fileSize: fileSize,
+                        createAt: faker.date.past(),
+                        fileURL: faker.internet.url(),
+                        resourceType: FileResourceType.NormalResources,
+                        meta: {
+                            whiteboardProjector: {
+                                taskToken: faker.random.word(),
+                                taskUUID: faker.random.word(),
+                                convertStep: chance.pickone([
+                                    FileConvertStep.None,
+                                    FileConvertStep.Converting,
+                                    FileConvertStep.Done,
+                                    FileConvertStep.Failed,
+                                ]),
+                                region: Region.CN_HZ,
+                            },
+                        },
+                    });
+                }
+
+                this.isFetchingFiles = false;
             }
         };
 
         makeObservable(
             this,
-            fakeStoreImplProps.reduce((o, k) => {
-                o[k] = action;
-                return o;
-            }, {} as AnnotationsMap<this, never>),
+            fakeStoreImplProps.reduce(
+                (o, k) => {
+                    o[k] = action;
+                    return o;
+                },
+                {
+                    files: observable,
+                } as AnnotationsMap<this, never>,
+            ),
         );
     }
 
@@ -182,7 +274,13 @@ export const Overview: Story<FakeStoreConfig> = config => {
     const [store] = useState(() => new FakeStore(config));
     return (
         <div className="ba br3 b--gray overflow-hidden" style={{ height: 600, maxHeight: "80vh" }}>
-            <CloudStorageContainer store={store} />
+            <CloudStorageContainer
+                path={"/path/to/directory/"}
+                pushHistory={(): void => {
+                    console.log("click push history");
+                }}
+                store={store}
+            />
         </div>
     );
 };
@@ -196,7 +294,13 @@ export const CompactMode: Story<FakeStoreConfig> = config => {
     });
     return (
         <div className="ba br3 b--gray overflow-hidden" style={{ height: "400px" }}>
-            <CloudStorageContainer store={store} />
+            <CloudStorageContainer
+                path={"/path/to/directory/"}
+                pushHistory={(): void => {
+                    console.log("click push history");
+                }}
+                store={store}
+            />
         </div>
     );
 };

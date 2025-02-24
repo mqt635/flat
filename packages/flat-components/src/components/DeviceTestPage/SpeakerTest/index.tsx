@@ -3,10 +3,10 @@ import stopSVG from "../icons/stop.svg";
 import "./style.less";
 
 import { Button } from "antd";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Device } from "../constants";
 import { DeviceTestSelect } from "../DeviceTestSelect";
-import { useTranslation } from "react-i18next";
+import { useTranslate } from "@netless/flat-i18n";
 import audioLocalResourceMP3 from "./assets/media/Goldberg Variations, BWV 988 - 05 - Variatio 4 a 1 Clav.mp3";
 
 export interface SpeakerTestProps {
@@ -16,6 +16,8 @@ export interface SpeakerTestProps {
     isSpeakerAccessible: boolean;
     audioResourceSrc?: string;
     setSpeakerDevice: (deviceID: string) => void;
+    startSpeakerTest: (url: string) => void;
+    stopSpeakerTest: () => void;
 }
 
 export const SpeakerTest: React.FC<SpeakerTestProps> = ({
@@ -25,15 +27,26 @@ export const SpeakerTest: React.FC<SpeakerTestProps> = ({
     isSpeakerAccessible,
     audioResourceSrc,
     setSpeakerDevice,
+    startSpeakerTest,
+    stopSpeakerTest,
 }) => {
-    const { t } = useTranslation();
+    const t = useTranslate();
     const [isPlaying, setIsPlaying] = useState(false);
-    const audioRef = useRef<HTMLAudioElement>(null);
 
     const togglePlay = (): void => {
-        isPlaying ? audioRef.current?.pause() : audioRef.current?.play();
         setIsPlaying(!isPlaying);
     };
+
+    useEffect(() => {
+        if (isPlaying) {
+            startSpeakerTest(audioResourceSrc || audioLocalResourceMP3);
+        } else {
+            stopSpeakerTest();
+        }
+        return () => {
+            stopSpeakerTest();
+        };
+    }, [audioResourceSrc, isPlaying, startSpeakerTest, stopSpeakerTest]);
 
     return (
         <div className="speaker-test-container">
@@ -47,11 +60,6 @@ export const SpeakerTest: React.FC<SpeakerTestProps> = ({
                 />
             </div>
             <div className="speaker-test-output-box">
-                <audio
-                    ref={audioRef}
-                    loop
-                    src={audioResourceSrc ? audioResourceSrc : audioLocalResourceMP3}
-                ></audio>
                 <Button icon={<img src={isPlaying ? stopSVG : playSVG} />} onClick={togglePlay}>
                     {speakerTestFileName}
                 </Button>

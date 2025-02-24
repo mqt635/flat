@@ -1,5 +1,11 @@
-import type AgoraRtcEngine from "agora-electron-sdk";
-const { ipcRenderer } = require("electron");
+import os from "os";
+import path from "path";
+
+const { ipcRenderer, shell } = require("electron");
+
+const {
+    agoraRTCElectronPreload,
+} = require("@netless/flat-service-provider-agora-rtc-electron/preload");
 
 /**
  * cannot be used here DOMContentLoaded or DOMNodeInserted
@@ -10,43 +16,9 @@ const { ipcRenderer } = require("electron");
  * this method will only be triggered on the main page
  * see: window-manager.ts
  */
-ipcRenderer.once("inject-agora-electron-sdk-addon", () => {
-    if (!process.env.AGORA_APP_ID) {
-        throw new Error("Agora App Id not set.");
-    }
-
-    const AgoraRtcSDK = require("agora-electron-sdk").default;
-
-    const rtcEngine: AgoraRtcEngine = new AgoraRtcSDK();
-    window.rtcEngine = rtcEngine;
-
-    if (rtcEngine.initialize(process.env.AGORA_APP_ID) < 0) {
-        throw new Error("[RTC] The app ID is invalid. Check if it is in the correct format.");
-    }
-
-    if (process.env.NODE_ENV === "development") {
-        rtcEngine.on("joinedChannel", (channel, uid) => {
-            console.log(`[RTC] ${uid} join channel ${channel}`);
-        });
-
-        rtcEngine.on("userJoined", uid => {
-            console.log("[RTC] userJoined", uid);
-        });
-
-        rtcEngine.on("leavechannel", () => {
-            console.log("[RTC] onleaveChannel");
-        });
-
-        rtcEngine.on("error", (err, msg) => {
-            console.error("[RTC] onerror----", err, msg);
-        });
-    }
+ipcRenderer.once("preload-dom-ready", (_event, args: { AGORA_APP_ID: string }) => {
+    agoraRTCElectronPreload(args.AGORA_APP_ID);
 });
-
-// delay sending event. prevent the main process from being too late listen for this event
-setTimeout(() => {
-    ipcRenderer.send("preload-load");
-}, 0);
 
 // because DOMContentLoaded and DOMNodeInserted cannot be used, a new method is adopted to solve the problem of jQuery import failure
 Object.defineProperties(window, {
@@ -61,3 +33,42 @@ Object.defineProperties(window, {
         },
     },
 });
+
+ipcRenderer.send("preload-loaded");
+
+// TODO: upgrade new version of the Electron after that replace contextBridge.exposeInMainWorld with window
+(window as any).electron = {
+    ipcRenderer: {
+        on: (
+            channel: string,
+            listeners: (event: Electron.IpcRendererEvent, ...args: any[]) => void,
+        ): Electron.IpcRenderer => ipcRenderer.on(channel, listeners),
+        send: (channel: string, ...args: any[]): void => ipcRenderer.send(channel, ...args),
+        invoke: (channel: string, ...args: any[]): Promise<any> =>
+            ipcRenderer.invoke(channel, ...args),
+        removeAllListeners: (channel: string): Electron.IpcRenderer =>
+            ipcRenderer.removeAllListeners(channel),
+    },
+    shell: {
+        openExternal: (
+            url: string,
+            options?: Electron.OpenExternalOptions | undefined,
+        ): Promise<void> => shell.openExternal(url, options),
+    },
+};
+
+(window as any).node = {
+    os: {
+        cpus: (): os.CpuInfo[] => os.cpus(),
+        freemem: (): number => os.freemem(),
+        platform: (): NodeJS.Platform => os.platform(),
+    },
+    path: {
+        join: (...paths: string[]): string => path.join(...paths),
+        dirname: (p: string): string => path.dirname(p),
+        basename: (p: string, ext?: string | undefined): string => path.basename(p, ext),
+    },
+};
+
+// code in renderer can use `if (window.isElectron)` with different logic
+(window as any).isElectron = true;

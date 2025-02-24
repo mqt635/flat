@@ -1,10 +1,17 @@
 import { initEnv } from "./init-env";
-import { initRegisterApps } from "./init-register-apps";
 import { initWhiteSDK } from "./init-white-sdk";
 import { initUI } from "./init-ui";
 import { initURLProtocol } from "./init-url-protocol";
-import { initWaitRTC } from "./init-wait-rtc";
+import { initFlatServices } from "./init-flat-services";
+import { initRegionConfigs } from "./init-region-configs";
 
-const tasks = [initEnv, initURLProtocol, initWhiteSDK, initWaitRTC, initUI, initRegisterApps];
+const tasks: Array<() => void | Promise<void>> = [
+    initEnv,
+    initURLProtocol,
+    initRegionConfigs,
+    initFlatServices,
+    initWhiteSDK,
+    initUI,
+];
 
 export default tasks;

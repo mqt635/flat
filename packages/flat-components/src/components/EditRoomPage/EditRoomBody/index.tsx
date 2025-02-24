@@ -5,17 +5,19 @@ import gbSVG from "./icons/gb.svg";
 import usSVG from "./icons/us.svg";
 import sgSVG from "./icons/sg.svg";
 
-import { Button, Checkbox, Dropdown, Form, Input, Menu, Modal } from "antd";
-import { CheckboxChangeEvent } from "antd/lib/checkbox";
-import { addWeeks, endOfDay, getDay } from "date-fns";
+import { useLanguage, useTranslate } from "@netless/flat-i18n";
+import Checkbox, { CheckboxChangeEvent } from "antd/lib/checkbox";
 import React, { useMemo, useRef, useState } from "react";
+import { addWeeks, endOfDay, getDay } from "date-fns";
+import { Button, Form, Input, Modal } from "antd";
 import { useHistory } from "react-router-dom";
-import { useTranslation } from "react-i18next";
+
 import { PeriodicEndType, RoomType, Week } from "../../../types/room";
 import { renderBeginTimePicker } from "./renderBeginTimePicker";
 import { renderEndTimePicker } from "./renderEndTimePicker";
 import { renderPeriodicForm } from "./renderPeriodicForm";
 import { ClassPicker } from "../../HomePage/ClassPicker";
+import { PmiDesc, PmiExistTip } from "../../Pmi";
 
 export enum Region {
     CN_HZ = "cn-hz",
@@ -54,6 +56,7 @@ export interface EditRoomFormValues {
         rate: number;
         endTime: Date;
     };
+    pmi?: boolean;
 }
 
 export type EditRoomFormInitialValues =
@@ -68,23 +71,40 @@ export interface EditRoomBodyProps {
     loading: boolean;
     onSubmit: (value: EditRoomFormValues) => void;
     previousPeriodicRoomBeginTime?: number | null;
+    nextPeriodicRoomBeginTime?: number | null;
     nextPeriodicRoomEndTime?: number | null;
+    pmi?: string | null;
+    autoPmiOn?: boolean;
+    pmiRoomExist?: boolean;
+    updateAutoPmiOn?: (autoPmiOn: boolean) => void;
 }
 
 export const EditRoomBody: React.FC<EditRoomBodyProps> = ({
+    pmi,
+    autoPmiOn,
+    pmiRoomExist,
     type,
     initialValues,
     loading,
     onSubmit,
+    updateAutoPmiOn,
     previousPeriodicRoomBeginTime,
+    nextPeriodicRoomBeginTime,
     nextPeriodicRoomEndTime,
 }) => {
     const history = useHistory();
 
     const [isFormVetted, setIsFormVetted] = useState(true);
     const [isShowEditSubmitConfirm, showEditSubmitConfirm] = useState(false);
-    const [region, setRegion] = useState<Region>(initialValues.region);
-    const { t, i18n } = useTranslation<string>();
+
+    const [isPeriodic, setIsPeriodic] = useState(false);
+    const enablePmi = useMemo(() => !!pmi && !isPeriodic, [isPeriodic, pmi]);
+
+    // @TODO: need to remove
+    const [region] = useState<Region>(initialValues.region);
+
+    const t = useTranslate();
+    const language = useLanguage();
 
     const hasInputAutoSelectedRef = useRef(false);
 
@@ -101,23 +121,6 @@ export const EditRoomBody: React.FC<EditRoomBodyProps> = ({
             ...initialValues,
         };
     }, [initialValues]);
-
-    const regionMenu = (
-        <Menu
-            className="edit-room-body-menu-item"
-            style={{ width: "auto" }}
-            onClick={e => setRegion(e.key as Region)}
-        >
-            <div style={{ padding: "4px 12px 0 14px", color: "gray" }}>{t("servers")}</div>
-            {regions.map(region => (
-                <Menu.Item key={region}>
-                    <img alt={region} src={RegionSVG[region]} style={{ width: 22 }} />
-                    <span style={{ paddingLeft: 8 }}>{t(`region-${region}`)}</span>
-                </Menu.Item>
-            ))}
-        </Menu>
-    );
-
     return (
         <>
             <div className="edit-room-body fancy-scrollbar">
@@ -159,19 +162,6 @@ export const EditRoomBody: React.FC<EditRoomBodyProps> = ({
                                 }}
                                 disabled={type === "periodicSub"}
                                 placeholder={t("enter-room-theme")}
-                                suffix={
-                                    <Dropdown
-                                        overlay={regionMenu}
-                                        placement="bottomRight"
-                                        trigger={["click"]}
-                                    >
-                                        <img
-                                            alt={region}
-                                            src={RegionSVG[region]}
-                                            style={{ cursor: "pointer", width: 22 }}
-                                        />
-                                    </Dropdown>
-                                }
                             />
                         </Form.Item>
                         <Form.Item label={t("type")} name="type">
@@ -181,9 +171,38 @@ export const EditRoomBody: React.FC<EditRoomBodyProps> = ({
                             t,
                             form,
                             previousPeriodicRoomBeginTime,
+                            nextPeriodicRoomBeginTime,
                             nextPeriodicRoomEndTime,
                         )}
-                        {renderEndTimePicker(t, form, nextPeriodicRoomEndTime)}
+                        {renderEndTimePicker(
+                            t,
+                            form,
+                            previousPeriodicRoomBeginTime,
+                            nextPeriodicRoomBeginTime,
+                            nextPeriodicRoomEndTime,
+                        )}
+                        {updateAutoPmiOn && (
+                            <Form.Item
+                                className="edit-room-form-item no-margin pmi"
+                                name="pmi"
+                                valuePropName="checked"
+                            >
+                                <div title={t("periodic-cannot-use-pmi")}>
+                                    <Checkbox
+                                        checked={enablePmi && autoPmiOn}
+                                        disabled={pmiRoomExist || !enablePmi}
+                                        onClick={() => updateAutoPmiOn(!autoPmiOn)}
+                                    >
+                                        <PmiDesc
+                                            className="edit-room-cycle"
+                                            pmi={pmi!}
+                                            text={t("turn-on-the-pmi")}
+                                        />
+                                    </Checkbox>
+                                    {pmiRoomExist && <PmiExistTip />}
+                                </div>
+                            </Form.Item>
+                        )}
                         {type === "schedule" ? (
                             <Form.Item name="isPeriodic" valuePropName="checked">
                                 <Checkbox onChange={onToggleIsPeriodic}>
@@ -203,7 +222,7 @@ export const EditRoomBody: React.FC<EditRoomBodyProps> = ({
                                 prev.isPeriodic !== curr.isPeriodic
                             }
                         >
-                            {renderPeriodicForm(t, i18n.language)}
+                            {renderPeriodicForm(t, language)}
                         </Form.Item>
                     </Form>
                     <div className="edit-room-under">
@@ -250,8 +269,8 @@ export const EditRoomBody: React.FC<EditRoomBodyProps> = ({
                             {t("confirm")}
                         </Button>,
                     ]}
+                    open={isShowEditSubmitConfirm}
                     title={renderModalTitle(type)}
-                    visible={isShowEditSubmitConfirm}
                     onCancel={hideEditSubmitConfirm}
                     onOk={onSubmitForm}
                 >
@@ -310,7 +329,7 @@ export const EditRoomBody: React.FC<EditRoomBodyProps> = ({
 
     function onSubmitForm(): void {
         if (!loading && isFormVetted) {
-            onSubmit({ ...form.getFieldsValue(true), region });
+            onSubmit({ ...(form.getFieldsValue(true) as EditRoomFormValues), region });
         }
     }
 
@@ -332,6 +351,8 @@ export const EditRoomBody: React.FC<EditRoomBodyProps> = ({
     }
 
     function formValidateStatus(): void {
+        // synchronize isPeriodic when periodic field changed
+        setIsPeriodic(form.getFieldValue("isPeriodic"));
         setIsFormVetted(form.getFieldsError().every(field => field.errors.length <= 0));
     }
 };

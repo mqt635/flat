@@ -1,6 +1,6 @@
 import type { Type as RuntimeType } from "../runtime";
 import type { UpdateCheckInfo, PrereleaseTag } from "../update";
-import { WindowsName } from "../constants";
+import { WindowsName, WindowStatus } from "../constants";
 
 export type WindowActionAsync = {
     "set-win-size": (args: {
@@ -15,12 +15,15 @@ export type WindowActionAsync = {
                   minHeight: number;
               };
         maximizable?: boolean;
+        trafficLightPosition?: { x: number; y: number };
     }) => void;
     "set-aspect-ratio": (args: { aspectRatio: number }) => void;
-    "disable-window": (args: { disable: boolean }) => void;
+    "intercept-native-window-close": (args: { intercept: boolean }) => void;
     "set-title": (args: { title: string }) => void;
     "force-close-window": (args: {}) => void;
     "set-visual-zoom-level": (args: { minimumLevel: number; maximumLevel: number }) => void;
+    "set-win-status": (args: { windowStatus: WindowStatus }) => void;
+    "set-theme": (args: { theme: "light" | "dark" | "auto" }) => void;
 };
 
 export type AppActionAsync = {
@@ -52,5 +55,10 @@ export interface EmitEvents {
           };
     "request-join-room": {
         roomUUID: string;
+    };
+    "request-replay-room": {
+        roomUUID: string;
+        ownerUUID: string;
+        roomType: string;
     };
 }

@@ -4,13 +4,13 @@ import "./style.less";
 
 import React, { FC, useContext } from "react";
 import { Col, Row } from "antd";
-import dateFnsGenerateConfig from "rc-picker/lib/generate/dateFns";
+import dateFnsGenerateConfig from "rc-picker/es/generate/dateFns";
 import generatePicker, { PickerTimeProps, PickerProps } from "antd/es/date-picker/generatePicker";
-import { ConfigContext } from "antd/lib/config-provider";
+import { ConfigContext } from "antd/es/config-provider";
 
 export type DatePickerProps = PickerProps<Date>;
 
-const DatePickerInner = generatePicker<Date>(dateFnsGenerateConfig);
+const DatePickerInner = /* @__PURE__ */ generatePicker<Date>(dateFnsGenerateConfig);
 
 export const DatePicker: FC<DatePickerProps> = props => {
     // For some reason DatePickerInner does not receive configs from ConfigContext.
@@ -72,8 +72,7 @@ export const FullTimePicker: FC<FullTimePickerProps> = ({
             <Col span={12}>
                 <TimePicker
                     allowClear={false}
-                    disabledHours={disabledHours}
-                    disabledMinutes={disabledMinutes}
+                    disabledTime={() => ({ disabledHours, disabledMinutes })}
                     format="HH:mm"
                     value={value}
                     onChange={date => {

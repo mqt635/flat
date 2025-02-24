@@ -4,6 +4,7 @@ import {
     windowHookClose,
     windowHookClosed,
     windowOpenDevTools,
+    windowOpenExternalLink,
     windowReadyToShow,
 } from "../utils/window-event";
 import {
@@ -85,6 +86,7 @@ export abstract class AbstractWindow<MULTI_INSTANCE extends boolean> {
         });
 
         windowReadyToShow(win);
+        windowOpenExternalLink(win);
 
         return win;
     }
@@ -114,7 +116,7 @@ export abstract class AbstractWindow<MULTI_INSTANCE extends boolean> {
 
     private static closeWindow(win: CustomWindow): void {
         if (!win.window.isDestroyed()) {
-            win.options.disableClose = false;
+            win.options.interceptClose = false;
             win.window.close();
         }
     }
@@ -133,11 +135,8 @@ export type AbstractWindows = {
 };
 
 // see: https://stackoverflow.com/questions/67114094/typescript-get-type-of-generic-class-parameter
-type GetClassParameterForAbstractWindow<T extends AbstractWindow<any>> = T extends AbstractWindow<
-    infer R
->
-    ? R
-    : unknown;
+type GetClassParameterForAbstractWindow<T extends AbstractWindow<any>> =
+    T extends AbstractWindow<infer R> ? R : unknown;
 
 export type IsMultiInstance<NAME extends constants.WindowsName> =
     GetClassParameterForAbstractWindow<AbstractWindows[NAME]>;

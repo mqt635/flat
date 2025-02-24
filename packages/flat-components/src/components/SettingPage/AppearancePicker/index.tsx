@@ -4,39 +4,36 @@ import autoSVG from "./icons/auto.svg";
 import "./style.less";
 
 import React from "react";
-import { useTranslation } from "react-i18next";
+import { useTranslate } from "@netless/flat-i18n";
 import { Radio, RadioChangeEvent } from "antd";
 import { FlatPrefersColorScheme } from "../../FlatThemeProvider";
 
 export interface AppearancePickerProps {
-    defaultValue: FlatPrefersColorScheme;
+    value: FlatPrefersColorScheme;
     changeAppearance: (event: RadioChangeEvent) => void;
 }
 
-export const AppearancePicker: React.FC<AppearancePickerProps> = ({
-    defaultValue,
-    changeAppearance,
-}) => {
-    const { t } = useTranslation();
+export const AppearancePicker: React.FC<AppearancePickerProps> = ({ value, changeAppearance }) => {
+    const t = useTranslate();
     return (
         <div className="appearance-picker-container">
-            <Radio.Group defaultValue={defaultValue} onChange={changeAppearance}>
+            <Radio.Group name="theme" value={value} onChange={changeAppearance}>
                 <Radio value={"light"}>
                     <div className="appearance-picker-option">
                         <img src={lightSVG} />
-                        <span>{t("flat-appearance-light")}</span>
+                        <span>{t("app-appearance-light")}</span>
                     </div>
                 </Radio>
                 <Radio value={"dark"}>
                     <div className="appearance-picker-option">
                         <img src={darkSVG} />
-                        <span>{t("flat-appearance-dark")}</span>
+                        <span>{t("app-appearance-dark")}</span>
                     </div>
                 </Radio>
                 <Radio value={"auto"}>
                     <div className="appearance-picker-option">
                         <img src={autoSVG} />
-                        <span>{t("flat-appearance-auto")}</span>
+                        <span>{t("app-appearance-auto")}</span>
                     </div>
                 </Radio>
             </Radio.Group>

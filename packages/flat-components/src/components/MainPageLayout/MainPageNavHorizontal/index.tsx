@@ -22,6 +22,7 @@ export interface MainPageNavHorizontalProps extends MainPageNavAvatarProps, Main
 }
 
 export const MainPageNavHorizontal: React.FC<MainPageNavHorizontalProps> = ({
+    userUUID,
     avatarSrc,
     userName,
     onClick,
@@ -33,8 +34,6 @@ export const MainPageNavHorizontal: React.FC<MainPageNavHorizontalProps> = ({
     generateAvatar,
     title,
 }) => {
-    const { TabPane } = Tabs;
-
     return (
         <div className="main-page-nav-horizontal-container">
             <div className="main-page-nav-horizontal-content">
@@ -48,6 +47,17 @@ export const MainPageNavHorizontal: React.FC<MainPageNavHorizontalProps> = ({
                                     leftMenu.some(menuItem => menuItem.key === key),
                                 ) || "none"
                             }
+                            items={leftMenu.map(menuItem => ({
+                                key: menuItem.key,
+                                label: (
+                                    <div className="main-page-nav-horizontal-left-menu-item">
+                                        <div className="main-page-nav-horizontal-left-menu-item-icon">
+                                            {menuItem.icon(activeKeys.includes(menuItem.key))}
+                                        </div>
+                                        {menuItem.title}
+                                    </div>
+                                ),
+                            }))}
                             onChange={key => {
                                 const item = leftMenu.find(e => e.key === key);
                                 if (item) {
@@ -58,11 +68,7 @@ export const MainPageNavHorizontal: React.FC<MainPageNavHorizontalProps> = ({
                                     }
                                 }
                             }}
-                        >
-                            {leftMenu.map(menuItem => {
-                                return <TabPane key={menuItem.key} tab={menuItem.title}></TabPane>;
-                            })}
-                        </Tabs>
+                        ></Tabs>
                     )}
                 </div>
                 <div className="main-page-nav-horizontal-right">
@@ -74,6 +80,7 @@ export const MainPageNavHorizontal: React.FC<MainPageNavHorizontalProps> = ({
                                     "is-active": activeKeys.includes(menuItem.key),
                                 })}
                                 href={menuItem.route}
+                                title={menuItem.htmlTitle}
                                 onClick={e => {
                                     e.preventDefault();
                                     onClick(menuItem);
@@ -95,6 +102,7 @@ export const MainPageNavHorizontal: React.FC<MainPageNavHorizontalProps> = ({
                             generateAvatar={generateAvatar}
                             popMenu={popMenu}
                             userName={userName}
+                            userUUID={userUUID}
                             onClick={onClick}
                         />
                     </div>

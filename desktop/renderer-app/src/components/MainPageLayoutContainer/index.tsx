@@ -1,130 +1,204 @@
 /* eslint react/display-name: off */
-import homeSVG from "./icons/home.svg";
-import homeActiveSVG from "./icons/home-active.svg";
-import diskSVG from "./icons/disk.svg";
-import diskActiveSVG from "./icons/disk-active.svg";
-import deviceSVG from "./icons/device.svg";
-import deviceActiveSVG from "./icons/device-active.svg";
-import settingSVG from "./icons/setting.svg";
-import gitHubSVG from "./icons/github.svg";
-import feedbackSVG from "./icons/feedback.svg";
-import logoutSVG from "./icons/logout.svg";
 import "./index.less";
 
 import React, { useContext } from "react";
-import { shell } from "electron";
 import { useHistory, useLocation } from "react-router-dom";
-import { MainPageLayout, MainPageLayoutItem, MainPageLayoutProps } from "flat-components";
-import { useTranslation } from "react-i18next";
+import {
+    MainPageLayout,
+    MainPageLayoutItem,
+    MainPageTopBarMenuItem,
+    MainPageLayoutProps,
+    SVGGithub,
+    SVGHomeFilled,
+    SVGHomeOutlined,
+    SVGCloudFilled,
+    SVGCloudOutlined,
+    SVGTest,
+    SVGTestFilled,
+    SVGSetting,
+    SVGFeedback,
+    SVGLogout,
+    SVGSun,
+    SVGMoon,
+    SVGSettingFilled,
+} from "flat-components";
+import { observer } from "mobx-react-lite";
+import { useTranslate } from "@netless/flat-i18n";
+import { useMedia } from "react-use";
 import { routeConfig, RouteNameType } from "../../route-config";
-import { GlobalStoreContext } from "../StoreProvider";
-import { generateAvatar } from "../../utils/generate-avatar";
+
+import {
+    GlobalStoreContext,
+    PreferencesStoreContext,
+    RuntimeContext,
+    WindowsSystemBtnContext,
+} from "@netless/flat-pages/src/components/StoreProvider";
+import { generateAvatar } from "@netless/flat-pages/src/utils/generate-avatar";
 
 export interface MainPageLayoutContainerProps {
     subMenu?: MainPageLayoutItem[];
     activeKeys?: string[];
+    MainPageHeaderTitle?: MainPageLayoutProps["title"];
+    showMainPageHeader?: MainPageLayoutProps["showMainPageHeader"];
     onRouteChange?: MainPageLayoutProps["onClick"];
+    onBackPreviousPage?: MainPageLayoutProps["onBackPreviousPage"];
 }
 
-export const MainPageLayoutContainer: React.FC<MainPageLayoutContainerProps> = ({
-    subMenu,
-    children,
-    activeKeys,
-    onRouteChange,
-}) => {
-    const { t } = useTranslation();
-    const sideMenu = [
-        {
-            key: routeConfig[RouteNameType.HomePage].path,
-            icon: (active: boolean): React.ReactNode => (
-                <img src={active ? homeActiveSVG : homeSVG} />
-            ),
-            title: "home",
-            route: routeConfig[RouteNameType.HomePage].path,
-        },
-        {
-            key: routeConfig[RouteNameType.CloudStoragePage].path,
-            icon: (active: boolean): React.ReactNode => (
-                <img src={active ? diskActiveSVG : diskSVG} />
-            ),
-            title: "cloudStorage",
-            route: routeConfig[RouteNameType.CloudStoragePage].path,
-        },
-    ];
+export const MainPageLayoutContainer = observer<MainPageLayoutContainerProps>(
+    function MainPageLayoutContainer({
+        subMenu,
+        children,
+        activeKeys,
+        MainPageHeaderTitle,
+        showMainPageHeader,
+        onRouteChange,
+        onBackPreviousPage,
+    }) {
+        const t = useTranslate();
+        const runtime = useContext(RuntimeContext);
+        const preferenceStore = useContext(PreferencesStoreContext);
+        const windowsBtnContext = useContext(WindowsSystemBtnContext);
+        const prefersDark = useMedia("(prefers-color-scheme: dark)");
+        const theme =
+            preferenceStore.prefersColorScheme === "auto"
+                ? prefersDark
+                    ? "dark"
+                    : "light"
+                : preferenceStore.prefersColorScheme;
 
-    const sideMenuFooter = [
-        {
-            key: "deviceCheck",
-            icon: (active: boolean): React.ReactNode => (
-                <img src={active ? deviceActiveSVG : deviceSVG} />
-            ),
-            title: "deviceCheck",
-            route: routeConfig[RouteNameType.SystemCheckPage].path,
-        },
-    ];
+        const sideMenu: MainPageLayoutItem[] = [
+            {
+                key: routeConfig[RouteNameType.HomePage].path,
+                title: "home",
+                htmlTitle: t("home"),
+                route: routeConfig[RouteNameType.HomePage].path,
+                icon: (active: boolean): React.ReactNode => {
+                    return active ? <SVGHomeFilled /> : <SVGHomeOutlined />;
+                },
+            },
+            {
+                key: routeConfig[RouteNameType.CloudStoragePage].path,
+                title: "cloudStorage",
+                htmlTitle: t("cloud-storage"),
+                route: routeConfig[RouteNameType.CloudStoragePage].path,
+                icon: (active: boolean): React.ReactNode => {
+                    return active ? <SVGCloudFilled /> : <SVGCloudOutlined />;
+                },
+            },
+        ];
 
-    const popMenu = [
-        {
-            key: routeConfig[RouteNameType.GeneralSettingPage].path,
-            icon: (): React.ReactNode => <img src={settingSVG} />,
-            title: t("settings"),
-            route: routeConfig[RouteNameType.GeneralSettingPage].path,
-        },
-        {
-            key: "getGitHubCode",
-            icon: (): React.ReactNode => <img src={gitHubSVG} />,
-            title: t("source-code"),
-            route: "https://github.com/netless-io/flat/",
-        },
-        {
-            key: "feedback",
-            icon: (): React.ReactNode => <img src={feedbackSVG} />,
-            title: t("feedback"),
-            route: "https://github.com/netless-io/flat/issues",
-        },
-        {
-            key: "logout",
-            icon: (): React.ReactNode => <img src={logoutSVG} />,
-            title: <span className="logout-title">{t("logout")}</span>,
-            route: routeConfig[RouteNameType.LoginPage].path,
-        },
-    ];
+        const sideMenuFooter: MainPageLayoutItem[] = [
+            {
+                key: "theme",
+                title: t("app-appearance-setting"),
+                htmlTitle: t("app-appearance-" + (theme === "dark" ? "light" : "dark")),
+                route: routeConfig[RouteNameType.GeneralSettingPage].path,
+                icon: theme === "dark" ? () => <SVGSun /> : () => <SVGMoon />,
+            },
+            {
+                key: routeConfig[RouteNameType.GeneralSettingPage].path,
+                icon: (active: boolean): React.ReactNode => {
+                    return active ? <SVGSettingFilled /> : <SVGSetting />;
+                },
+                title: t("settings"),
+                htmlTitle: t("settings"),
+                route: routeConfig[RouteNameType.GeneralSettingPage].path,
+            },
+            {
+                key: "deviceCheck",
+                title: "deviceCheck",
+                htmlTitle: t("device-test"),
+                route: routeConfig[RouteNameType.SystemCheckPage].path,
+                icon: (active: boolean): React.ReactNode => {
+                    return active ? <SVGTestFilled /> : <SVGTest />;
+                },
+            },
+        ];
 
-    const location = useLocation();
+        const popMenu = [
+            {
+                key: routeConfig[RouteNameType.GeneralSettingPage].path,
+                icon: (): React.ReactNode => <SVGSetting />,
+                title: t("settings"),
+                route: routeConfig[RouteNameType.GeneralSettingPage].path,
+            },
+            {
+                key: "feedback",
+                icon: (): React.ReactNode => <SVGFeedback />,
+                title: t("feedback"),
+                route: process.env.FEEDBACK_URL,
+            },
+            {
+                key: "logout",
+                icon: (): React.ReactNode => <SVGLogout />,
+                title: <span className="logout-title">{t("logout")}</span>,
+                route: routeConfig[RouteNameType.LoginPage].path,
+            },
+        ];
 
-    activeKeys ??= [location.pathname];
+        const location = useLocation();
 
-    const history = useHistory();
+        activeKeys ??= [location.pathname];
 
-    const globalStore = useContext(GlobalStoreContext);
+        const history = useHistory();
 
-    const onMenuItemClick = (mainPageLayoutItem: MainPageLayoutItem): void => {
-        if (mainPageLayoutItem.key === "logout") {
-            globalStore.logout();
-        }
+        const globalStore = useContext(GlobalStoreContext);
 
-        if (mainPageLayoutItem.route.startsWith("/")) {
-            onRouteChange
-                ? onRouteChange(mainPageLayoutItem)
-                : history.push(mainPageLayoutItem.route);
-        } else {
-            void shell.openExternal(mainPageLayoutItem.route);
-        }
-    };
+        const onMenuItemClick = (mainPageLayoutItem: MainPageLayoutItem): void => {
+            if (mainPageLayoutItem.key === "logout") {
+                globalStore.logout();
+            }
 
-    return (
-        <MainPageLayout
-            activeKeys={activeKeys}
-            avatarSrc={globalStore.userInfo?.avatar ?? ""}
-            generateAvatar={generateAvatar}
-            popMenu={popMenu}
-            sideMenu={sideMenu}
-            sideMenuFooter={sideMenuFooter}
-            subMenu={subMenu}
-            userName={globalStore.userInfo?.name ?? ""}
-            onClick={onMenuItemClick}
-        >
-            {children}
-        </MainPageLayout>
-    );
-};
+            if (mainPageLayoutItem.key === "theme") {
+                preferenceStore.updatePrefersColorScheme(theme === "dark" ? "light" : "dark");
+                return;
+            }
+
+            if (mainPageLayoutItem.route.startsWith("/")) {
+                onRouteChange
+                    ? onRouteChange(mainPageLayoutItem)
+                    : history.push(mainPageLayoutItem.route);
+            } else {
+                void window.electron.shell.openExternal(mainPageLayoutItem.route);
+            }
+        };
+
+        const topBarMenu: MainPageTopBarMenuItem[] = [
+            {
+                key: "github",
+                icon: <SVGGithub />,
+                route: "https://github.com/netless-io/flat",
+                htmlTitle: "netless-io/flat",
+            },
+        ];
+
+        const onClickTopBarMenu = (mainPageTopBarMenuItem: MainPageTopBarMenuItem): void => {
+            void window.electron.shell.openExternal(mainPageTopBarMenuItem.route);
+        };
+
+        return (
+            <MainPageLayout
+                activeKeys={activeKeys}
+                avatarSrc={globalStore.userInfo?.avatar ?? ""}
+                generateAvatar={generateAvatar}
+                isMac={runtime?.isMac}
+                popMenu={popMenu}
+                showMainPageHeader={showMainPageHeader}
+                showWindowsSystemBtn={windowsBtnContext?.showWindowsBtn}
+                sideMenu={sideMenu}
+                sideMenuFooter={sideMenuFooter}
+                subMenu={subMenu}
+                title={MainPageHeaderTitle}
+                topBarMenu={topBarMenu}
+                userName={globalStore.userName ?? ""}
+                userUUID={globalStore.userUUID ?? ""}
+                onBackPreviousPage={onBackPreviousPage}
+                onClick={onMenuItemClick}
+                onClickTopBarMenu={onClickTopBarMenu}
+                onClickWindowsSystemBtn={windowsBtnContext?.onClickWindowsSystemBtn}
+            >
+                {children}
+            </MainPageLayout>
+        );
+    },
+);

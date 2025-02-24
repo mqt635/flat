@@ -8,7 +8,7 @@ export interface IconMicProps
     noise?: number;
 }
 
-export const IconMic = React.memo<IconMicProps>(function IconMic({
+export const IconMic = /* @__PURE__ */ React.memo<IconMicProps>(function IconMic({
     getVolumeLevel,
     noise = 0.075,
     ...restProps
@@ -55,6 +55,7 @@ export const IconMic = React.memo<IconMicProps>(function IconMic({
 
     return (
         <svg
+            className="flat-icon"
             fill="none"
             height="24"
             viewBox="0 0 24 24"
@@ -85,7 +86,7 @@ export const IconMic = React.memo<IconMicProps>(function IconMic({
                     fill="#44AD00"
                     height={vHeight * 2}
                     style={{
-                        transform: `translateY(${Math.pow(1 - volumeLevel, 2.3) * vHeight}px)`,
+                        transform: `translateY(${(1 - volumeLevel) * vHeight}px)`,
                         transition: "transform .1s",
                     }}
                     width={vWidth}

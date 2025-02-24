@@ -1,6 +1,6 @@
 import React from "react";
 import { Button, Modal } from "antd";
-import { useTranslation } from "react-i18next";
+import { useTranslate } from "@netless/flat-i18n";
 
 export interface CancelSubPeriodicRoomModalProps {
     visible: boolean;
@@ -15,7 +15,7 @@ export const CancelSubPeriodicRoomModal: React.FC<CancelSubPeriodicRoomModalProp
     onCancel,
     onCancelSubPeriodicRoom,
 }) => {
-    const { t } = useTranslation();
+    const t = useTranslate();
     return (
         <Modal
             footer={[
@@ -26,8 +26,8 @@ export const CancelSubPeriodicRoomModal: React.FC<CancelSubPeriodicRoomModalProp
                     {t("confirm")}
                 </Button>,
             ]}
+            open={visible}
             title={t("cancel-room")}
-            visible={visible}
             onCancel={onCancel}
         >
             <span>{t("cancel-sub-periodic-room-tips")}</span>

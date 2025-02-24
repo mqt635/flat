@@ -1,6 +1,3 @@
-export interface Device {
-    deviceId: string;
-    groupId: string;
-    kind: "audioinput" | "audiooutput" | "videoinput";
-    label: string;
-}
+import { IServiceVideoChatDevice } from "@netless/flat-services";
+
+export type Device = IServiceVideoChatDevice;

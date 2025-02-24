@@ -1,8 +1,8 @@
+import { FlatI18nTFunction } from "@netless/flat-i18n";
 import { Col, Form, InputNumber, Row } from "antd";
 import { FormInstance, RuleObject } from "antd/lib/form";
 import { endOfDay, getDay, isBefore, startOfDay } from "date-fns";
 import React from "react";
-import { TFunction } from "react-i18next";
 import { EditRoomFormValues } from ".";
 import { Week } from "../../../types/room";
 import { formatISODayWeekiii, getWeekNames, syncPeriodicEndAmount } from "../../../utils/room";
@@ -10,7 +10,7 @@ import { DatePicker } from "../FullTimePicker";
 import { PeriodicEndTypeSelector } from "../PeriodicEndTypeSelector";
 import { WeekRateSelector } from "../WeekRateSelector";
 
-export const renderPeriodicForm = (t: TFunction<string>, lang: string) =>
+export const renderPeriodicForm = (t: FlatI18nTFunction, lang: string) =>
     function renderPeriodicForm(form: FormInstance<EditRoomFormValues>) {
         const isPeriodic: EditRoomFormValues["isPeriodic"] = form.getFieldValue("isPeriodic");
         if (!isPeriodic) {
@@ -61,23 +61,29 @@ export const renderPeriodicForm = (t: TFunction<string>, lang: string) =>
                 form.getFieldsValue(["periodic", "type"]);
             return (
                 <div className="edit-room-tips">
-                    {periodic.weeks.length > 0 ? (
-                        <div className="edit-room-tips-title">
-                            {t("every-frequency", { freq: getWeekNames(periodic.weeks, lang) })}
-                        </div>
-                    ) : (
-                        <div>{t("no-frequency-selected")}</div>
-                    )}
-                    <div className="edit-room-tips-type">
-                        {t("room-type")}
-                        {t("colon")}
-                        {t(`class-room-type.${roomType}`)}
+                    <div>
+                        {t("time")}
+
+                        <span>
+                            {periodic.weeks.length > 0
+                                ? t("every-frequency", { freq: getWeekNames(periodic.weeks, lang) })
+                                : t("no-frequency-selected")}
+                        </span>
                     </div>
-                    <div className="edit-room-tips-inner">
-                        {t("periodic-room-tip", {
-                            date: formatISODayWeekiii(periodic.endTime, lang),
-                            rate: periodic.rate,
-                        })}
+                    <div>
+                        {t("type")}
+
+                        <span>{t(`class-room-type.${roomType}`)}</span>
+                    </div>
+                    <div>
+                        {t("periodic")}
+
+                        <span>
+                            {t("periodic-room-tip", {
+                                date: formatISODayWeekiii(periodic.endTime, lang),
+                                rate: periodic.rate,
+                            })}
+                        </span>
                     </div>
                 </div>
             );
@@ -119,7 +125,7 @@ export const renderPeriodicForm = (t: TFunction<string>, lang: string) =>
         }
 
         function onWeekSelected(w: Week[]): Week[] {
-            const week = getDay(form.getFieldValue("beginTime"));
+            const week = getDay(form.getFieldValue("beginTime") as EditRoomFormValues["beginTime"]);
             if (!w.includes(week)) {
                 w.push(week);
             }

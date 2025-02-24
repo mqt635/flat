@@ -2,7 +2,8 @@
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "dbaeumer.vscode-eslint",
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
+    "source.fixAll.eslint": "explicit",
+    "source.addMissingImports": "explicit"
   },
   "i18n-ally.localesPaths": ["./packages/flat-i18n/locales/"],
   "i18n-ally.enabledFrameworks": ["react", "i18next"],
@@ -10,26 +11,9 @@
   "i18n-ally.sourceLanguage": "zh-CN",
   "i18n-ally.displayLanguage": "zh-CN",
   "eslint.enable": true,
-  "eslint.workingDirectories": [
-    {
-      "directory": "desktop/main-app",
-      "changeProcessCWD": true
-    },
-    {
-      "directory": "desktop/renderer-app",
-      "changeProcessCWD": true
-    },
-    {
-      "directory": "web/flat-web",
-      "changeProcessCWD": true
-    },
-    {
-      "directory": "packages/flat-components",
-      "changeProcessCWD": true
-    },
-    {
-      "directory": "packages/flat-types",
-      "changeProcessCWD": true
-    }
-  ]
+  "eslint.format.enable": true,
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "[less]": {
+    "editor.defaultFormatter": "vscode.css-language-features"
+  }
 }

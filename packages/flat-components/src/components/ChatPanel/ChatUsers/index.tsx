@@ -4,27 +4,27 @@ import React from "react";
 import classNames from "classnames";
 import { observer } from "mobx-react-lite";
 import { AutoSizer, List, ListRowRenderer, Size } from "react-virtualized";
-import { useTranslation } from "react-i18next";
+import { useTranslate } from "@netless/flat-i18n";
 import { ChatUser, ChatUserProps } from "../ChatUser";
 import { User } from "../../../types/user";
 
 export type ChatUsersProps = {
     isCreator: boolean;
-    hasHandRaising: boolean;
-    hasSpeaking: boolean;
+    hasHandRaising?: boolean;
+    withAcceptHands: boolean;
     users: User[];
     onCancelAllHandRaising: () => void;
 } & Omit<ChatUserProps, "user">;
 
-export const ChatUsers = observer<ChatUsersProps>(function ChatUsers({
+export const ChatUsers = /* @__PURE__ */ observer<ChatUsersProps>(function ChatUsers({
     isCreator,
     hasHandRaising,
-    hasSpeaking,
+    withAcceptHands,
     users,
     onCancelAllHandRaising,
     ...restProps
 }) {
-    const { t } = useTranslation();
+    const t = useTranslate();
     const rowRenderer: ListRowRenderer = ({ index, style }): React.ReactNode => {
         const user = users[index];
         return (
@@ -48,11 +48,9 @@ export const ChatUsers = observer<ChatUsersProps>(function ChatUsers({
         );
     };
 
-    const isShowCancelAllHandRaising = isCreator && hasHandRaising;
-
     return (
-        <div className={classNames("chat-users-wrap", { "has-speaking": hasSpeaking })}>
-            {isShowCancelAllHandRaising && (
+        <div className={classNames("chat-users-wrap", { "with-accept-hands": withAcceptHands })}>
+            {isCreator && hasHandRaising && (
                 <div className="chat-users-cancel-hands-wrap">
                     <button className="chat-users-cancel-hands" onClick={onCancelAllHandRaising}>
                         {t("cancel-hand-raising")}
@@ -61,7 +59,7 @@ export const ChatUsers = observer<ChatUsersProps>(function ChatUsers({
             )}
             <div
                 className={classNames("chat-users", {
-                    "with-cancel-hands": isShowCancelAllHandRaising,
+                    "with-cancel-hands": isCreator && hasHandRaising,
                 })}
             >
                 <AutoSizer>{renderList}</AutoSizer>

@@ -1,8 +1,9 @@
 .edit-room-form {
+
     &,
     input,
     .ant-select,
-    .ant-picker-input > input {
+    .ant-picker-input>input {
         color: var(--text);
     }
 
@@ -11,7 +12,7 @@
     }
 
     .edit-room-form-label,
-    .ant-form-item-label > label {
+    .ant-form-item-label>label {
         color: var(--text-strong);
     }
 
@@ -21,6 +22,14 @@
     .ant-input-number,
     .ant-input-number-input {
         border-radius: 4px !important;
+    }
+
+    .edit-room-form-item.no-margin {
+        margin-bottom: 0;
+    }
+
+    .edit-room-form-item.pmi .ant-checkbox+span {
+        padding-right: 0;
     }
 }
 
@@ -82,12 +91,15 @@
 .edit-room-body {
     overflow: visible;
     background-color: #fff;
+
     .ant-row {
         margin-left: 0 !important;
         margin-right: 0 !important;
+
         .ant-col:first-child {
             padding-left: 0 !important;
         }
+
         .ant-col:last-child {
             padding-right: 0 !important;
         }
@@ -102,7 +114,7 @@
 .edit-room-cycle {
     font-size: 12px;
     font-weight: 400;
-    color: #7a7b7c;
+    color: var(--grey-6);
 }
 
 .edit-room-under {
@@ -115,23 +127,20 @@
 }
 
 .edit-room-tips {
-    background-color: var(--grey-0);
-    border-radius: 8px;
-    padding: 12px;
-}
+    padding: 8px 16px;
+    border-radius: 6px;
+    background-color: #f6f6f6;
+    font-size: 12px;
 
-.edit-room-tips-title {
-    color: #3381ff;
-}
+    >div {
+        display: flex;
+        justify-content: space-between;
+        line-height: 24px;
+    }
 
-.edit-room-tips-type {
-    color: #7a7b7c;
-    margin-top: 8px;
-    margin-bottom: 8px;
-}
-
-.edit-room-tips-inner {
-    color: #7a7b7c;
+    >div+div {
+        margin-top: 4px;
+    }
 }
 
 .edit-room-docs {
@@ -151,6 +160,7 @@
 .edit-room-docs-left {
     display: flex;
     align-items: center;
+
     span {
         color: #7a7b7c;
         font-size: 12px;
@@ -170,6 +180,11 @@
     }
 
     .edit-room-tips {
+        color: var(--text);
         background-color: var(--grey-9);
+    }
+
+    .edit-room-cycle {
+        color: var(--text);
     }
 }

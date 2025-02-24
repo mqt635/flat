@@ -6,44 +6,35 @@ on:
     paths:
       - "packages/flat-components/src/**"
 
+permissions:
+  contents: write
+
 jobs:
   deploy-storybook:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Install NodeJS
-        uses: actions/setup-node@v2
+      - name: Install PNPM
+        uses: pnpm/action-setup@v2
         with:
-          node-version: "16"
+          version: 9
 
-      - uses: actions/cache@v2
-        id: yarn-cache
+      - name: Restore Cache
+        uses: actions/setup-node@v3
         with:
-          key: yarn-storybook-v1-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
-          path: |
-            ./node_modules
-            ./packages/**/node_modules
+          node-version: 18
+          cache: "pnpm"
 
       - name: Install dependencies
         run: |-
-          if node ./scripts/ci/install-changed-package-dependencies.js; then
             # failure automatically retries 3 times
-            yarn run bootstrap || yarn run bootstrap || yarn run bootstrap
-          fi
-        env:
-          components: true
-        if: steps.yarn-cache.outputs.cache-hit != 'true'
-
-      - name: Build Types
-        # it must be added here, otherwise when the cache matches, there will be flat-types not found
-        run: yarn workspace flat-types build
-        if: steps.yarn-cache.outputs.cache-hit == 'true'
+            pnpm i || pnpm i || pnpm i
 
       - name: Build Storybook
-        run: yarn workspace flat-components build
+        run: pnpm -F flat-components build
 
       - name: Deploy Storybook
         uses: peaceiris/actions-gh-pages@v3

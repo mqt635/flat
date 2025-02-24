@@ -6,7 +6,7 @@ import { CameraTest } from "./CameraTest";
 import { Device } from "./constants";
 import { MicrophoneTest } from "./MicrophoneTest";
 import { SpeakerTest } from "./SpeakerTest";
-import { useTranslation } from "react-i18next";
+import { useTranslate } from "@netless/flat-i18n";
 
 export type { Device };
 
@@ -24,11 +24,20 @@ export interface DeviceTestPanelProps {
     isSpeakerAccessible: boolean;
     isMicrophoneAccessible: boolean;
     cameraVideoStreamRef: React.RefObject<HTMLDivElement>;
+    isTurnOffDeviceTest: boolean;
     setSpeakerDevice: (deviceID: string) => void;
     setCameraDevice: (deviceID: string) => void;
     setMicrophoneDevice: (deviceID: string) => void;
+    startSpeakerTest: (url: string) => void;
+    stopSpeakerTest: () => void;
     toggleDeviceTest: () => void;
     joinRoom: () => void;
+    autoMicOn: boolean;
+    autoCameraOn: boolean;
+    toggleAutoMicOn: () => void;
+    toggleAutoCameraOn: () => void;
+    mirrorMode: boolean;
+    toggleMirrorMode: () => void;
 }
 
 export const DeviceTestPanel: React.FC<DeviceTestPanelProps> = ({
@@ -45,13 +54,22 @@ export const DeviceTestPanel: React.FC<DeviceTestPanelProps> = ({
     isSpeakerAccessible,
     isMicrophoneAccessible,
     cameraVideoStreamRef,
+    isTurnOffDeviceTest,
     setCameraDevice,
     setMicrophoneDevice,
     setSpeakerDevice,
+    startSpeakerTest,
+    stopSpeakerTest,
     toggleDeviceTest,
     joinRoom,
+    autoMicOn,
+    autoCameraOn,
+    toggleAutoMicOn,
+    toggleAutoCameraOn,
+    mirrorMode,
+    toggleMirrorMode,
 }) => {
-    const { t } = useTranslation();
+    const t = useTranslate();
     return (
         <div className="device-test-panel-container">
             <div className="device-test-panel-title-box">{t("device-test")}</div>
@@ -73,6 +91,8 @@ export const DeviceTestPanel: React.FC<DeviceTestPanelProps> = ({
                         setSpeakerDevice={setSpeakerDevice}
                         speakerDevices={speakerDevices}
                         speakerTestFileName={speakerTestFileName}
+                        startSpeakerTest={startSpeakerTest}
+                        stopSpeakerTest={stopSpeakerTest}
                     />
                     <MicrophoneTest
                         currentMicrophoneDeviceID={currentMicrophoneDeviceID}
@@ -81,11 +101,27 @@ export const DeviceTestPanel: React.FC<DeviceTestPanelProps> = ({
                         microphoneVolume={microphoneVolume}
                         setMicrophoneDevice={setMicrophoneDevice}
                     />
+                    <div className="device-test-panel-join-options">
+                        <div className="device-test-panel-join-options-text">
+                            {t("join-options")}
+                        </div>
+                        <Checkbox checked={autoMicOn} onClick={toggleAutoMicOn}>
+                            {t("turn-on-the-microphone")}
+                        </Checkbox>
+                        <Checkbox checked={autoCameraOn} onClick={toggleAutoCameraOn}>
+                            {t("turn-on-the-camera")}
+                        </Checkbox>
+                        <Checkbox checked={mirrorMode} onClick={toggleMirrorMode}>
+                            {t("mirror")}
+                        </Checkbox>
+                    </div>
                 </div>
             </div>
             <div className="device-test-panel-tips-box">
                 <div className="device-test-panel-tips-radio">
-                    <Checkbox onClick={toggleDeviceTest}>{t("close-tip")}</Checkbox>
+                    <Checkbox checked={isTurnOffDeviceTest} onClick={toggleDeviceTest}>
+                        {t("close-tip")}
+                    </Checkbox>
                 </div>
                 <div className="device-test-panel-join-btn">
                     <Button type="primary" onClick={joinRoom}>

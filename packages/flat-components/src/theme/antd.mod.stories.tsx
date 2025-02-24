@@ -2,7 +2,7 @@ import "./antd.mod.stories.less";
 
 import React from "react";
 import { Story, Meta } from "@storybook/react";
-import { Input, Radio, Checkbox, Button, ButtonProps } from "antd";
+import { Input, Radio, Checkbox, Button, ButtonProps, InputRef, Table, Switch } from "antd";
 import { SVGChat } from "../components/FlatIcons";
 import { useRef } from "@storybook/client-api";
 import faker from "faker";
@@ -44,7 +44,7 @@ export const Buttons: Story = () => {
 };
 
 export const Overview: Story = () => {
-    const selectAllRef = useRef<Input | null>(null);
+    const selectAllRef = useRef<InputRef | null>(null);
 
     const inputExample = (
         <div>
@@ -141,6 +141,26 @@ export const Overview: Story = () => {
         </div>
     );
 
+    const switchExample = (
+        <div>
+            <div className="mv4">
+                <Switch checked={false} />
+            </div>
+            <div className="mv4">
+                <Switch checked={false} className="ant-switch-hovered" />
+            </div>
+            <div className="mv4">
+                <Switch checked />
+            </div>
+            <div className="mv4">
+                <Switch disabled />
+            </div>
+            <div className="mv4">
+                <Switch checked disabled />
+            </div>
+        </div>
+    );
+
     const buttonExample = (
         <div>
             <div className="flex justify-around items-center mb3">
@@ -189,6 +209,29 @@ export const Overview: Story = () => {
         <Input.TextArea rows={5} value={Array(50).fill(faker.lorem.words(100)).join("\n\n")} />
     );
 
+    const tableExample = (
+        <Table
+            columns={[
+                {
+                    key: "name",
+                    dataIndex: "name",
+                    title: "Name",
+                    render: text => <a>{text}</a>,
+                },
+                {
+                    key: "age",
+                    dataIndex: "age",
+                    title: "Age",
+                },
+            ]}
+            dataSource={[
+                { key: "1", name: "John Brown", age: 32 },
+                { key: "2", name: "Jim Green", age: 42 },
+                { key: "3", name: "Joe Black", age: 32 },
+            ]}
+        />
+    );
+
     return (
         <div className="w-80-ns center" style={{ color: "#7A7B7C" }}>
             <div className="columns is-variable is-8">
@@ -197,6 +240,7 @@ export const Overview: Story = () => {
                     <div className="columns is-mobile">
                         <div className="column flex justify-center">{radioExample}</div>
                         <div className="column flex justify-center">{checkboxExample}</div>
+                        <div className="column flex justify-center">{switchExample}</div>
                     </div>
                 </div>
             </div>
@@ -207,6 +251,9 @@ export const Overview: Story = () => {
                 <div className="column is-half-desktop is-three-quarters-tablet">
                     {textAreaExample}
                 </div>
+            </div>
+            <div className="columns">
+                <div className="column">{tableExample}</div>
             </div>
         </div>
     );

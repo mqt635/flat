@@ -1,14 +1,13 @@
 import React from "react";
 import { action, computed, makeObservable, observable } from "mobx";
 import prettyBytes from "pretty-bytes";
-import {
-    CloudStorageFile,
-    CloudStorageFileName,
-    CloudStorageUploadTask,
-} from "../../components/CloudStorage/types";
+import { CloudStorageFileName, CloudStorageUploadTask } from "../../components/CloudStorage/types";
+import type { CloudFile, NewDirectoryPayload } from "@netless/flat-server-api";
+import { searchPath } from "../../utils/searchPath";
 
 export type UploadID = string;
 export type FileUUID = string;
+export type DirectoryInfo = NewDirectoryPayload;
 
 export abstract class CloudStorageStore {
     /** Compact UI for small panel */
@@ -21,6 +20,12 @@ export abstract class CloudStorageStore {
     public isUploadPanelExpand = false;
     /** UUID of file that is under renaming */
     public renamingFileUUID?: FileUUID = "";
+    /** Cloud storage single page data returned by the server */
+    public cloudStorageSinglePageFiles = 50;
+    /** In order to avoid multiple calls the fetchMoreCloudStorageData when fetching data */
+    public isFetchingFiles = false;
+    //  current parent directory
+    public parentDirectoryPath = searchPath() || "/";
 
     /** Display upload panel */
     public get isUploadPanelVisible(): boolean {
@@ -29,7 +34,12 @@ export abstract class CloudStorageStore {
 
     /** Human readable user total cloud storage usage */
     public get totalUsageHR(): string {
-        return Number.isNaN(this.totalUsage) ? "" : prettyBytes(this.totalUsage);
+        return Number.isNaN(this.totalUsage) ? "" : prettyBytes(this.totalUsage, { binary: true });
+    }
+
+    /** get fetch data pagination value of cloudStorage. */
+    public get cloudStorageDataPagination(): number {
+        return Math.ceil(this.files.length / this.cloudStorageSinglePageFiles);
     }
 
     /** Uploading -> Error -> Idle -> Success */
@@ -68,6 +78,8 @@ export abstract class CloudStorageStore {
             selectedFileUUIDs: observable,
             isUploadPanelExpand: observable,
             renamingFileUUID: observable,
+            isFetchingFiles: observable,
+            parentDirectoryPath: observable,
 
             isUploadPanelVisible: computed,
             totalUsageHR: computed,
@@ -77,6 +89,8 @@ export abstract class CloudStorageStore {
             uploadTotalCount: computed,
 
             setRenamePanel: action,
+            setCurrentDirectoryPath: action,
+            setParentDirectoryPath: action,
             setPanelExpand: action,
             setCompact: action,
             onSelectionChange: action,
@@ -86,6 +100,14 @@ export abstract class CloudStorageStore {
 
     public setRenamePanel = (fileUUID?: FileUUID): void => {
         this.renamingFileUUID = fileUUID;
+    };
+
+    public setCurrentDirectoryPath = (currentDirectoryPath: string): void => {
+        this.parentDirectoryPath = this.parentDirectoryPath + currentDirectoryPath + "/";
+    };
+
+    public setParentDirectoryPath = (parentDirectoryPath: string): void => {
+        this.parentDirectoryPath = parentDirectoryPath;
     };
 
     public setPanelExpand = (isExpand: boolean): void => {
@@ -111,50 +133,70 @@ export abstract class CloudStorageStore {
         }
     };
 
-    abstract pendingUploadTasks: CloudStorageUploadTask[];
+    public abstract pendingUploadTasks: CloudStorageUploadTask[];
 
-    abstract uploadingUploadTasks: CloudStorageUploadTask[];
+    public abstract uploadingUploadTasks: CloudStorageUploadTask[];
 
-    abstract successUploadTasks: CloudStorageUploadTask[];
+    public abstract successUploadTasks: CloudStorageUploadTask[];
 
-    abstract failedUploadTasks: CloudStorageUploadTask[];
+    public abstract failedUploadTasks: CloudStorageUploadTask[];
 
     /** User cloud storage files */
-    abstract files: CloudStorageFile[];
+    public abstract files: CloudFile[];
 
     /** Render file menus item base on fileUUID */
-    abstract fileMenus: (
-        file: CloudStorageFile,
+    public abstract fileMenus: (
+        file: CloudFile,
         index: number,
     ) => Array<{ key: React.Key; name: React.ReactNode }> | void | undefined | null;
 
     /** When a file menus item is clicked */
-    abstract onItemMenuClick: (fileUUID: FileUUID, menuKey: React.Key) => void;
+    public abstract onItemMenuClick: (
+        fileUUID: FileUUID,
+        menuKey: React.Key,
+        pushHistory: (path: string) => void,
+    ) => void;
 
     /** When file title click */
-    abstract onItemTitleClick: (fileUUID: FileUUID) => void;
+    public abstract onItemTitleClick: (
+        fileUUID: FileUUID,
+        pushHistory: (path: string) => void,
+    ) => void;
+
+    public abstract onParentDirectoryPathClick: (parentPath: string) => void;
 
     /** When page delete button is pressed */
-    abstract onBatchDelete(): void;
+    public abstract onBatchDelete(): void;
 
     /** When upload button is pressed */
-    abstract onUpload(): void;
+    public abstract onUpload(): void;
 
     /** When upload panel close button is pressed */
-    abstract onUploadPanelClose(): void;
+    public abstract onUploadPanelClose(): void;
 
     /** Restart uploading a file */
-    abstract onUploadRetry(fileUUID: FileUUID): void;
+    public abstract onUploadRetry(fileUUID: FileUUID): void;
 
     /** Stop uploading a file */
-    abstract onUploadCancel(fileUUID: FileUUID): void;
+    public abstract onUploadCancel(fileUUID: FileUUID): void;
 
     /** When a filename is changed to a meaningful new name */
-    abstract onNewFileName(fileUUID: FileUUID, fileName: CloudStorageFileName): void;
+    public abstract onNewFileName(fileUUID: FileUUID, fileName: CloudStorageFileName): void;
 
-    /** Add Online HTML5 Courseware to Cloud Storage */
-    abstract addExternalFile(fileName: string, fileURL: string): Promise<void>;
+    /** new empty directory file */
+    public abstract onNewEmptyDirectory(): void;
+    /** new directory file */
+    public abstract onNewDirectoryFile(directoryInfo: DirectoryInfo): Promise<void>;
 
     /** When file(s) are dropped in the container. */
-    abstract onDropFile(files: FileList): void;
+    public abstract onDropFile(files: FileList): void;
+
+    /** When file(s) are dropped in the container. */
+    public abstract onDropFile(files: FileList): void;
+
+    /** When cloudStorage files is 50 or more, pull up to bottom that loading will fetch more pagination Data of the cloudStorage. */
+    public abstract fetchMoreCloudStorageData: (
+        page: number,
+        currentDirectoryPath: string,
+    ) => Promise<void>;
 }

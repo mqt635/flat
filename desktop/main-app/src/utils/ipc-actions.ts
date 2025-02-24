@@ -1,6 +1,6 @@
 import { windowManager } from "../window-manager";
 import { ipc } from "flat-types";
-import { app, ipcMain, powerSaveBlocker } from "electron";
+import { app, ipcMain, powerSaveBlocker, nativeTheme } from "electron";
 import runtime from "./runtime";
 import { updateService } from "./update-service";
 import { update } from "flat-types";
@@ -48,6 +48,11 @@ const windowActionAsync = (customWindow: CustomWindow): ipc.WindowActionAsync =>
 
             window.setSize(args.width, args.height);
 
+            // There's no such method on Windows.
+            if (window.setTrafficLightPosition) {
+                window.setTrafficLightPosition(args.trafficLightPosition || { x: 5, y: 12 });
+            }
+
             if (args.autoCenter) {
                 window.center();
             }
@@ -69,8 +74,8 @@ const windowActionAsync = (customWindow: CustomWindow): ipc.WindowActionAsync =>
             //
             // window.setFullScreenable(isReset);
         },
-        "disable-window": args => {
-            options.disableClose = args.disable;
+        "intercept-native-window-close": args => {
+            options.interceptClose = args.intercept;
         },
         "set-title": args => {
             window.setTitle(args.title);
@@ -82,6 +87,32 @@ const windowActionAsync = (customWindow: CustomWindow): ipc.WindowActionAsync =>
             customWindow.window.webContents
                 .setVisualZoomLevelLimits(args.minimumLevel, args.maximumLevel)
                 .catch(console.error);
+        },
+        "set-win-status": args => {
+            switch (args.windowStatus) {
+                case "minimize": {
+                    window.minimize();
+                    break;
+                }
+                case "maximize": {
+                    if (window.isMaximized()) {
+                        window.unmaximize();
+                    } else {
+                        window.maximize();
+                    }
+                    break;
+                }
+                case "close": {
+                    window.close();
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
+        },
+        "set-theme": args => {
+            nativeTheme.themeSource = args.theme === "auto" ? "system" : args.theme;
         },
     };
 };
@@ -171,6 +202,7 @@ export const injectionWindowIPCAction = (customWindow: CustomWindow): void => {
                 .getWin(args.browserWindowID);
 
             if (realCustomWindow) {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                 windowActionAsync(realCustomWindow)[args.actions](args.args);
             }
         },

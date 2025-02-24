@@ -4,7 +4,7 @@ import "./style.less";
 import React from "react";
 import { Button, Select } from "antd";
 import { Device } from "../constants";
-import { useTranslation } from "react-i18next";
+import { useTranslate } from "@netless/flat-i18n";
 
 export interface DeviceTestSelectProps {
     devices?: Device[];
@@ -19,13 +19,16 @@ export const DeviceTestSelect: React.FC<DeviceTestSelectProps> = ({
     currentDeviceID,
     onChange,
 }) => {
-    const { t } = useTranslation();
+    const t = useTranslate();
+    const deviceId = devices?.some(device => device.deviceId === currentDeviceID)
+        ? currentDeviceID
+        : undefined;
 
     return (
         <div className="device-test-select-container">
             {isDeviceAccessible ? (
                 <div className="device-test-select-box">
-                    <Select value={currentDeviceID} onChange={onChange}>
+                    <Select value={deviceId} onChange={onChange}>
                         {devices?.map(({ deviceId, label }) => {
                             return (
                                 <Select.Option key={deviceId} value={deviceId}>

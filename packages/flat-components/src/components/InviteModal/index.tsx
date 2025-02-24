@@ -5,10 +5,10 @@ import { Modal } from "antd";
 import { differenceInCalendarDays, format } from "date-fns/fp";
 import { RoomInfo, Week } from "../../types/room";
 import { formatInviteCode, getWeekNames } from "../../utils/room";
-import { useTranslation } from "react-i18next";
+import { useLanguage, useTranslate } from "@netless/flat-i18n";
 
-const completeTimeFormat = format("yyyy-MM-dd HH:mm");
-const onlySuffixTimeFormat = format("HH:mm");
+const completeTimeFormat = /* @__PURE__ */ format("yyyy-MM-dd HH:mm");
+const onlySuffixTimeFormat = /* @__PURE__ */ format("HH:mm");
 
 export interface InviteModalProps {
     visible: boolean;
@@ -17,6 +17,8 @@ export interface InviteModalProps {
     baseUrl: string;
     // repeated weeks for periodic rooms
     periodicWeeks?: Week[];
+    // is self pmi room
+    isPmi?: boolean;
     onCopy: (text: string) => void;
     onCancel: () => void;
 }
@@ -24,15 +26,19 @@ export interface InviteModalProps {
 export const InviteModal: React.FC<InviteModalProps> = ({
     visible,
     room,
+    isPmi: isSelfPmi,
     periodicWeeks,
     userName,
     baseUrl,
     onCopy,
     onCancel,
 }) => {
-    const { t, i18n } = useTranslation();
+    const t = useTranslate();
+    const language = useLanguage();
     const { beginTime, endTime, periodicUUID, roomUUID, inviteCode, title } = room;
     const uuid = periodicUUID || roomUUID;
+    const isPmi = room.isPmi || isSelfPmi;
+    const joinLink = `${baseUrl}/join/${(isPmi && inviteCode) || uuid}`;
 
     const formattedTimeRange = useMemo<string>(() => {
         if (!beginTime || !endTime) {
@@ -45,24 +51,23 @@ export const InviteModal: React.FC<InviteModalProps> = ({
                 ? onlySuffixTimeFormat(endTime)
                 : completeTimeFormat(endTime);
 
-        return `${formatBeginTime}~${formatEndTime}`;
+        return `${formatBeginTime} ~ ${formatEndTime}`;
     }, [beginTime, endTime]);
 
     const onCopyClicked = (): void => {
         const basePrefixText =
-            t("invite-prefix", { userName, title }) +
-            "\n" +
-            (formattedTimeRange ? t("invite-begin-time", { time: formattedTimeRange }) : "");
+            t(isPmi ? "pmi-invite-prefix" : "invite-prefix", { userName, title }) +
+            (formattedTimeRange ? "\n" + t("invite-begin-time", { time: formattedTimeRange }) : "");
         const baseSuffixText =
             "\n" +
             "\n" +
             t("invite-suffix", { uuid: formatInviteCode(uuid, inviteCode) }) +
             "\n" +
-            t("join-link", { link: `${baseUrl}/join/${uuid}` });
+            t("invite-join-link", { link: joinLink });
 
         if (periodicUUID) {
             const content = periodicWeeks
-                ? t("repeat-weeks", { weeks: getWeekNames(periodicWeeks, i18n.language) })
+                ? "\n" + t("repeat-weeks", { weeks: getWeekNames(periodicWeeks, language) })
                 : "";
 
             onCopy(`${basePrefixText}${content}${baseSuffixText}`);
@@ -76,13 +81,13 @@ export const InviteModal: React.FC<InviteModalProps> = ({
             cancelText={t("cancel")}
             className="invite-modal"
             okText={t("copy")}
-            visible={visible}
+            open={visible}
             width={460}
             onCancel={onCancel}
             onOk={onCopyClicked}
         >
             <div className="invite-modal-header">
-                <span>{t("invite-title", { userName })}</span>
+                <span>{t(isPmi ? "pmi-invite-title" : "invite-title", { userName })}</span>
                 <span>{t("join-and-book-by-room-uuid")}</span>
             </div>
             <div className="invite-modal-content">
@@ -92,7 +97,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({
                 </div>
                 <div className="invite-modal-content-item">
                     <span>{t("room-uuid")}</span>
-                    <span style={{ userSelect: "text" }}>{formatInviteCode(uuid, inviteCode)}</span>
+                    <span>{formatInviteCode(uuid, inviteCode)}</span>
                 </div>
                 {formattedTimeRange && (
                     <div className="invite-modal-content-item">
@@ -101,10 +106,8 @@ export const InviteModal: React.FC<InviteModalProps> = ({
                     </div>
                 )}
                 <div className="invite-modal-content-item">
-                    <span>{t("join-link", { link: "" })}</span>
-                    <span style={{ userSelect: "text" }}>
-                        {baseUrl}/join/{uuid}
-                    </span>
+                    <span>{t("join-link")}</span>
+                    <span>{joinLink}</span>
                 </div>
             </div>
         </Modal>

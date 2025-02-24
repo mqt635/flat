@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import { MainPageLayoutItem } from "../types";
 
 export interface MainPageNavAvatarProps {
+    userUUID: string;
     /** user avatar src*/
     avatarSrc: string;
     /** user name */
@@ -20,6 +21,7 @@ export interface MainPageNavAvatarProps {
 }
 
 export const MainPageNavAvatar: React.FC<MainPageNavAvatarProps> = ({
+    userUUID,
     avatarSrc,
     userName,
     onClick,
@@ -30,7 +32,7 @@ export const MainPageNavAvatar: React.FC<MainPageNavAvatarProps> = ({
     const [popMenuVisible, setPopMenuVisible] = useState(false);
     const [isAvatarLoadFailed, setAvatarLoadFailed] = useState(false);
 
-    const avatar = isAvatarLoadFailed ? generateAvatar(avatarSrc) : avatarSrc;
+    const avatar = isAvatarLoadFailed || !avatarSrc ? generateAvatar(userUUID) : avatarSrc;
 
     const togglePopMenuVisible = (): void => {
         setPopMenuVisible(!popMenuVisible);
@@ -39,17 +41,17 @@ export const MainPageNavAvatar: React.FC<MainPageNavAvatarProps> = ({
     return (
         <Popover
             content={renderPopMenuInner}
+            open={popMenuVisible}
             overlayClassName="main-page-nav-popover"
             placement="bottomRight"
             title={renderPopMenuTitle}
             trigger="click"
-            visible={popMenuVisible}
-            onVisibleChange={togglePopMenuVisible}
+            onOpenChange={togglePopMenuVisible}
         >
             <Avatar
                 className="main-page-nav-avatar"
-                icon={<img src={avatar} onError={() => setAvatarLoadFailed(true)} />}
-                size={32}
+                icon={<img src={avatar} onError={() => avatar && setAvatarLoadFailed(true)} />}
+                size={24}
             />
         </Popover>
     );
@@ -62,10 +64,11 @@ export const MainPageNavAvatar: React.FC<MainPageNavAvatarProps> = ({
                     return (
                         <a
                             key={menuItem.key}
-                            className="main-page-pop-menu-item "
+                            className="main-page-pop-menu-item"
                             onClick={e => {
                                 e.preventDefault();
                                 onClick(menuItem);
+                                togglePopMenuVisible();
                             }}
                         >
                             <span className="main-page-pop-menu-item-icon">

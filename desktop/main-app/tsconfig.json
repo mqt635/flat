@@ -4,10 +4,6 @@
     "target": "es2017",
     "module": "CommonJS",
     "lib": ["es2017", "DOM"],
-    "baseUrl": ".",
-    "paths": {
-      "flat-types": ["../../packages/flat-types/src"]
-    }
   },
-  "include": ["src/**/*.ts", "typings/*.ts"]
+  "include": ["src/**/*.ts", "typings/*.ts", "scripts/**/*.ts"]
 }

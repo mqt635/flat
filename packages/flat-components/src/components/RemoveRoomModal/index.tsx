@@ -2,7 +2,7 @@ import "./style.less";
 
 import { Button, Checkbox, Modal } from "antd";
 import React, { useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useTranslate } from "@netless/flat-i18n";
 
 export interface RemoveRoomModalProps {
     cancelModalVisible: boolean;
@@ -23,7 +23,7 @@ export const RemoveRoomModal: React.FC<RemoveRoomModalProps> = ({
     onCancel,
     onCancelRoom,
 }) => {
-    const { t } = useTranslation();
+    const t = useTranslate();
     const [isCancelAll, setIsCancelAll] = useState(false);
     const isPeriodicRoom = !!periodicUUID && !roomUUID;
     const isSubPeriodicRoom = periodicUUID && roomUUID;
@@ -90,8 +90,8 @@ export const RemoveRoomModal: React.FC<RemoveRoomModalProps> = ({
                     {t("confirm")}
                 </Button>,
             ]}
+            open={cancelModalVisible}
             title={title}
-            visible={cancelModalVisible}
             wrapClassName="remove-room-modal-container"
             onCancel={onCancel}
         >

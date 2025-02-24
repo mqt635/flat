@@ -1,52 +1,38 @@
 import "./style.less";
 
-import React, { useState } from "react";
-import { Tabs } from "antd";
+import React from "react";
 import { observer } from "mobx-react-lite";
-import { useTranslation } from "react-i18next";
-import { SVGChat, SVGUserGroup } from "../FlatIcons";
+import { useTranslate } from "@netless/flat-i18n";
 import { ChatMessages, ChatMessagesProps } from "./ChatMessages";
 import { ChatTabTitle, ChatTabTitleProps } from "./ChatTabTitle";
-import { ChatUsers, ChatUsersProps } from "./ChatUsers";
 
-export type ChatPanelProps = ChatTabTitleProps &
-    Omit<ChatMessagesProps, "visible"> &
-    ChatUsersProps;
+export type ChatPanelProps = {
+    totalUserCount?: number;
+    onClickTotalUsersCount?: () => void;
+    readOnly?: boolean;
+    cc?: React.ReactNode;
+} & ChatTabTitleProps &
+    Omit<ChatMessagesProps, "visible">;
 
-export const ChatPanel = observer<ChatPanelProps>(function ChatPanel(props) {
-    const { t } = useTranslation();
-    const [activeTab, setActiveTab] = useState<"messages" | "users">("messages");
+export const ChatPanel = /* @__PURE__ */ observer<ChatPanelProps>(function ChatPanel(props) {
+    const t = useTranslate();
 
     return (
         <div className="chat-panel">
-            <Tabs
-                activeKey={activeTab}
-                tabBarGutter={0}
-                onChange={setActiveTab as (key: string) => void}
-            >
-                <Tabs.TabPane
-                    key="messages"
-                    tab={
-                        <ChatTabTitle>
-                            <SVGChat />
-                            <span>{t("messages")}</span>
-                        </ChatTabTitle>
-                    }
-                >
-                    <ChatMessages {...props} visible={activeTab === "messages"} />
-                </Tabs.TabPane>
-                <Tabs.TabPane
-                    key="users"
-                    tab={
-                        <ChatTabTitle {...props}>
-                            <SVGUserGroup />
-                            <span>{t("users")}</span>
-                        </ChatTabTitle>
-                    }
-                >
-                    <ChatUsers {...props} />
-                </Tabs.TabPane>
-            </Tabs>
+            {!props.readOnly && (
+                <div className="chat-panel-header">
+                    <ChatTabTitle>
+                        <span>{t("messages")}</span>
+                    </ChatTabTitle>
+                    {props.totalUserCount && (
+                        <span className="chat-tab-subtitle" onClick={props.onClickTotalUsersCount}>
+                            {t("total-users-count", { count: props.totalUserCount })}
+                        </span>
+                    )}
+                </div>
+            )}
+            <ChatMessages {...props} visible readOnly={props.readOnly} />
+            {props.cc && <div className="chat-panel-cc">{props.cc}</div>}
         </div>
     );
 });

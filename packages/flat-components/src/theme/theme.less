@@ -39,11 +39,16 @@
     --link-focus: var(--blue-5);
     --link-visited: var(--blue-3);
 
-    --font-family: "Avenir", "PingFang SC", "Source Han Sans SC", "Microsoft YaHei", "Helvetica Neue",
+    --font-family: "Helvetica Neue", "PingFang SC", "Source Han Sans SC", "Microsoft YaHei",
         "Noto Sans CJK SC", "WenQuanYi Micro Hei", sans-serif;
 
     font-family: var(--font-family);
     color: var(--text);
+}
+
+html[lang^="zh"] .flat-theme-root {
+    --font-family: "PingFang SC", "Source Han Sans SC", "Microsoft YaHei", "Helvetica Neue",
+        "Noto Sans CJK SC", "WenQuanYi Micro Hei", sans-serif;
 }
 
 .flat-color-scheme-dark .flat-theme-root,
@@ -81,10 +86,12 @@
 }
 
 .flat-theme-root {
-    background-color: var(--grey-0);
+    // @TODO: danger! more and more `#f6f6f6` were used
+    background-color: #f6f6f6;
 }
 
 .flat-color-scheme-dark {
+
     & .flat-theme-root,
     &.flat-theme-root {
         background-color: var(--grey-12);

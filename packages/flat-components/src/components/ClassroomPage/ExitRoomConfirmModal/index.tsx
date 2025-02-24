@@ -1,6 +1,8 @@
-import React, { FC } from "react";
+/* eslint-disable eslint-comments/disable-enable-pair */
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
+import React, { FC, useEffect } from "react";
 import { Button, Modal } from "antd";
-import { useTranslation } from "react-i18next";
+import { useTranslate } from "@netless/flat-i18n";
 
 export interface StopClassConfirmModalProps {
     visible: boolean;
@@ -19,12 +21,12 @@ export const StopClassConfirmModal: FC<StopClassConfirmModalProps> = ({
     onStop,
     onCancel,
 }) => {
-    const { t } = useTranslation();
+    const t = useTranslate();
     return (
         <Modal
             okButtonProps={{ loading }}
+            open={visible}
             title={t("confirmation-of-the-end-of-classes")}
-            visible={visible}
             onCancel={onCancel}
             onOk={onStop}
         >
@@ -37,9 +39,13 @@ export interface CloseRoomConfirmModalProps {
     visible: boolean;
     hangLoading: boolean;
     stopLoading: boolean;
+    rateModal?: React.ReactNode;
+    showRateModal?: boolean;
+    setShowRateModal?: (show: boolean) => void;
     onHang: () => void;
     onStop: () => void;
     onCancel: () => void;
+    setGrade?: () => Promise<void>;
 }
 
 /**
@@ -50,31 +56,53 @@ export const CloseRoomConfirmModal: FC<CloseRoomConfirmModalProps> = ({
     visible,
     hangLoading,
     stopLoading,
+    rateModal,
+    showRateModal,
+    setShowRateModal,
     onHang,
     onStop,
     onCancel,
 }) => {
-    const { t } = useTranslation();
+    const t = useTranslate();
+    const [open, setOpen] = React.useState(visible);
+    useEffect(() => {
+        setOpen(visible);
+    }, [visible]);
     return (
-        <Modal
-            footer={[
-                <Button key="Cancel" onClick={onCancel}>
-                    {t("cancel")}
-                </Button>,
-                <Button key="ReturnMain" loading={hangLoading} onClick={onHang}>
-                    {t("hang-up-the-room")}
-                </Button>,
-                <Button key="StopClass" loading={stopLoading} type="primary" onClick={onStop}>
-                    {t("end-the-class")}
-                </Button>,
-            ]}
-            title={t("close-option")}
-            visible={visible}
-            onCancel={onCancel}
-            onOk={onCancel}
-        >
-            <p>{t("exit-room-tips")}</p>
-        </Modal>
+        <>
+            <Modal
+                footer={[
+                    <Button key="Cancel" onClick={onCancel}>
+                        {t("cancel")}
+                    </Button>,
+                    <Button key="ReturnMain" loading={hangLoading} onClick={onHang}>
+                        {t("hang-up-the-room")}
+                    </Button>,
+                    <Button
+                        key="StopClass"
+                        loading={stopLoading}
+                        type="primary"
+                        onClick={() => {
+                            if (setShowRateModal) {
+                                setShowRateModal(true);
+                                setOpen(false);
+                            } else {
+                                onStop();
+                            }
+                        }}
+                    >
+                        {t("end-the-class")}
+                    </Button>,
+                ]}
+                open={open}
+                title={t("close-option")}
+                onCancel={onCancel}
+                onOk={onCancel}
+            >
+                <p>{t("exit-room-tips")}</p>
+            </Modal>
+            {(showRateModal && rateModal) || null}
+        </>
     );
 };
 
@@ -93,11 +121,11 @@ export const ExitRoomConfirmModal: FC<ExitRoomConfirmModalProps> = ({
     onExit,
     onCancel,
 }) => {
-    const { t } = useTranslation();
+    const t = useTranslate();
     return (
         <Modal
+            open={visible}
             title={t("student-sure-to-exit-the-room")}
-            visible={visible}
             onCancel={onCancel}
             onOk={onExit}
         >

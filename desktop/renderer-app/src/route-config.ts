@@ -1,25 +1,30 @@
 import { ComponentType } from "react";
-import SplashPage from "./pages/SplashPage";
-import LoginPage from "./pages/LoginPage";
-import BigClassPage from "./pages/BigClassPage";
-import SmallClassPage from "./pages/SmallClassPage";
-import OneToOnePage from "./pages/OneToOnePage";
-import ReplayPage from "./pages/ReplayPage";
-import RoomDetailPage from "./pages/RoomDetailPage";
-import HomePage from "./pages/HomePage";
-import UserScheduledPage from "./pages/UserScheduledPage";
-import { ModifyOrdinaryRoomPage } from "./pages/ModifyOrdinaryRoomPage";
-import { ModifyPeriodicRoomPage } from "./pages/ModifyPeriodicRoomPage";
-import { RoomType } from "./api-middleware/flatServer/constants";
-import { CloudStoragePage } from "./pages/CloudStoragePage";
+import { RoomDetailPage } from "@netless/flat-pages/src/RoomDetailPage";
+import { HomePage } from "@netless/flat-pages/src/HomePage";
+import { UserScheduledPage } from "@netless/flat-pages/src/UserScheduledPage";
+import { ModifyOrdinaryRoomPage } from "@netless/flat-pages/src/ModifyOrdinaryRoomPage";
+import { DevicesTestPage } from "@netless/flat-pages/src/DevicesTestPage";
+import { LoginPage } from "@netless/flat-pages/src/LoginPage";
+import { BigClassPage } from "@netless/flat-pages/src/BigClassPage";
+import { SmallClassPage } from "@netless/flat-pages/src/SmallClassPage";
+import { OneToOnePage } from "@netless/flat-pages/src/OneToOnePage";
+import { AIPage } from "@netless/flat-pages/src/AIPage";
+import { ModifyPeriodicRoomPage } from "@netless/flat-pages/src/ModifyPeriodicRoomPage";
+import { PeriodicRoomDetailPage } from "@netless/flat-pages/src/PeriodicRoomDetailPage";
+import { GeneralSettingPage } from "@netless/flat-pages/src/UserSettingPage/GeneralSettingPage";
+import { HotKeySettingPage } from "@netless/flat-pages/src/UserSettingPage/HotKeySettingPage";
+import { CloudStoragePage } from "@netless/flat-pages/src/CloudStoragePage";
 import { CameraCheckPage } from "./pages/DeviceCheckPages/CameraCheckPage";
 import { MicrophoneCheckPage } from "./pages/DeviceCheckPages/MicrophoneCheckPage";
 import { SpeakerCheckPage } from "./pages/DeviceCheckPages/SpeakerCheckPage";
 import { SystemCheckPage } from "./pages/DeviceCheckPages/SystemCheckPage";
-import { GeneralSettingPage } from "./pages/UserSettingPage/GeneralSettingPage";
-import { HotKeySettingPage } from "./pages/UserSettingPage/HotKeySettingPage";
 import { AboutPage } from "./pages/UserSettingPage/AboutPage";
-import { PeriodicRoomDetailPage } from "./pages/PeriodicRoomDetailPage";
+import { ReplayPage } from "@netless/flat-pages/src/ReplayPage";
+import SplashPage from "./pages/SplashPage";
+import { ApplicationsPage } from "@netless/flat-pages/src/UserSettingPage/ApplicationsPage";
+import { OAuthPage } from "@netless/flat-pages/src/UserSettingPage/OAuthPage";
+import { SensitivePage } from "@netless/flat-pages/src/SensitivePage";
+import { RoomType } from "@netless/flat-server-api";
 
 export enum RouteNameType {
     SplashPage = "SplashPage",
@@ -28,6 +33,7 @@ export enum RouteNameType {
     SmallClassPage = "SmallClassPage",
     BigClassPage = "BigClassPage",
     OneToOnePage = "OneToOnePage",
+    AIPage = "AIPage",
     RoomDetailPage = "RoomDetailPage",
     UserScheduledPage = "UserScheduledPage",
     PeriodicRoomDetailPage = "PeriodicRoomDetailPage",
@@ -42,17 +48,22 @@ export enum RouteNameType {
     GeneralSettingPage = "GeneralSettingPage",
     HotKeySettingPage = "HotKeySettingPage",
     AboutPage = "AboutPage",
+    DevicesTestPage = "DevicesTestPage",
+    ApplicationsPage = "ApplicationsPage",
+    OAuthPage = "OAuthPage",
+    SensitivePage = "SensitivePage",
 }
 
 export type ClassRouteName =
     | RouteNameType.SmallClassPage
     | RouteNameType.OneToOnePage
-    | RouteNameType.BigClassPage;
+    | RouteNameType.BigClassPage
+    | RouteNameType.AIPage;
 
 export const routeConfig = {
     [RouteNameType.SplashPage]: {
         title: "SplashPage",
-        path: "/",
+        path: "/splash",
         component: SplashPage,
     },
     [RouteNameType.LoginPage]: {
@@ -62,7 +73,7 @@ export const routeConfig = {
     },
     [RouteNameType.HomePage]: {
         title: "HomePage",
-        path: "/user/",
+        path: "/",
         component: HomePage,
     },
     [RouteNameType.SmallClassPage]: {
@@ -74,6 +85,11 @@ export const routeConfig = {
         title: "OneToOnePage",
         path: "/classroom/OneToOne/:roomUUID/:ownerUUID/",
         component: OneToOnePage,
+    },
+    [RouteNameType.AIPage]: {
+        title: "AIPage",
+        path: "/classroom/AIPage/:roomUUID/:ownerUUID/",
+        component: AIPage,
     },
     [RouteNameType.BigClassPage]: {
         title: "BigClassPage",
@@ -149,6 +165,26 @@ export const routeConfig = {
         title: "AboutPage",
         path: "/about/",
         component: AboutPage,
+    },
+    [RouteNameType.DevicesTestPage]: {
+        title: "DevicesTestPage",
+        path: "/devices-test/:roomUUID/",
+        component: DevicesTestPage,
+    },
+    [RouteNameType.ApplicationsPage]: {
+        title: "ApplicationsPage",
+        path: "/installations/",
+        component: ApplicationsPage,
+    },
+    [RouteNameType.OAuthPage]: {
+        title: "OAuthPage",
+        path: "/apps/",
+        component: OAuthPage,
+    },
+    [RouteNameType.SensitivePage]: {
+        title: "SensitivePage",
+        path: "/sensitive/",
+        component: SensitivePage,
     },
 } as const;
 
